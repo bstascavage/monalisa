@@ -1,0 +1,53 @@
+# https://taskfile.dev
+
+version: "3"
+
+env:
+  NPM_PACKAGE: '{{ .PACKAGE | default "" }}'
+
+tasks:
+  init:
+    desc: Initializes the dev environment
+    cmds:
+      - asdf install
+      - pre-commit install
+      - npm install -g @aws-amplify/cli
+      - task: npm-install
+      - amplify init
+
+  validate:
+    desc: Validate the pre-commit hooks
+    cmds:
+      - task init
+      - pre-commit run -a
+
+  clean:
+    desc: Cleans up the local DB
+    cmds:
+      - rm -f amplify/mock-data/dynamodb/*
+
+  npm-install:
+    desc: Installs npm packages for frontend
+    cmds:
+      - npm install --save $NPM_PACKAGE
+
+  serve:
+    desc: Starts the react frontend
+    deps:
+      - task: npm-start
+        vars: { REACT_APP_LOCAL_BACKEND: true }
+      - task: mock-api
+    vars:
+      REACT_APP_LOCAL_BACKEND: true
+
+  npm-start:
+    desc: Starts npm dev server
+    cmds:
+      - REACT_APP_LOCAL_BACKEND={{.REACT_APP_LOCAL_BACKEND}} npm start
+    vars:
+      REACT_APP_LOCAL_BACKEND: '{{ coalesce .REACT_APP_LOCAL_BACKEND "true"}}'
+
+  mock-api:
+    desc: Starts a local mock api server
+    cmds:
+      - amplify mock api
