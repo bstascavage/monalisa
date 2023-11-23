@@ -130,6 +130,9 @@ function renderServerCards(pageState, setPageState) {
 
 function getAllHints(pageState, setPageState) {
   // TODO: Clean this up.  Separate out connection logic and hint logic.
+  // There needs to be a function that adds all the clients to an array
+  // when the state is "adding clients".  After clients are added, migrate to "retrieve_hints" stage
+  // Loop on the "retrieve_hints" stage in till all games have hints
   // Move hint logic to its own file
   const server = pageState.servers[pageState.selected_server];
   const players = server.players;
