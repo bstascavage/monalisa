@@ -1,7 +1,8 @@
 import "./App.css";
 import TextInput from "./TextInput";
 import CheckBox from "./Checkbox";
-import React, { useReducer, useState } from "react";
+import Dropdown from "./Dropdown";
+import React, { useReducer, useState, useEffect } from "react";
 import {
   Card,
   CardBody,
@@ -75,9 +76,9 @@ function renderServerCards(pageState, setPageState) {
       setPageState({ type: "connecting" });
       initialClient.connect(connectionInfo).then(() => {
         console.log("Connected to the server");
-        const foo = JSON.parse(localStorage.getItem("servers"));
+        const localConfig = JSON.parse(localStorage.getItem("servers"));
 
-        if ("players" in foo[event.nickname]) {
+        if ("players" in localConfig[event.nickname]) {
           setPageState({
             type: "create_clients",
             servers: pageState.servers,
@@ -124,15 +125,11 @@ function renderServerCards(pageState, setPageState) {
       </Card>,
     );
   }
+
   return <Col>{cardList}</Col>;
 }
 
 function createClients(pageState, setPageState) {
-  // TODO: Clean this up.  Separate out connection logic and hint logic.
-  // There needs to be a function that adds all the clients to an array
-  // when the state is "adding clients".  After clients are added, migrate to "create_clients" stage
-  // Loop on the "create_clients" stage in till all games have hints
-  // Move hint logic to its own file
   const server = pageState.servers[pageState.selected_server];
   const players = server.players;
   let clients = pageState.clients;
@@ -160,7 +157,7 @@ function createClients(pageState, setPageState) {
     try {
       client.connect(connectionInfo).then(() => {
         console.log(`Connected to the server for player: ${player.name}`);
-        clients.push(client);
+        clients.push({ client: client, player: player.name });
 
         if (
           pageState.servers[pageState.selected_server].players.length ===
@@ -175,31 +172,147 @@ function createClients(pageState, setPageState) {
   }
 }
 
-function retrieveHints(pageState, setPageState) {
-  let renderList = [];
+function dynamicFilter(pageState, playerFilter, setPlayerFilter) {
+  // Creates a filter for each game, which is not static
+  let playerList = [{ name: "All", checked: true }];
 
   for (
     let game_index = 0;
     game_index < pageState.clients.length;
     game_index++
   ) {
-    const client = pageState.clients[game_index];
+    playerList.push({
+      name: pageState.clients[game_index].player,
+      checked: false,
+    });
+  }
+
+  setPlayerFilter({ playerList: playerList });
+}
+
+function retrieveHints(pageState, hintData, setHintData) {
+  let hintList = [];
+
+  for (
+    let game_index = 0;
+    game_index < pageState.clients.length;
+    game_index++
+  ) {
+    const client = pageState.clients[game_index].client;
     const hints = client.hints.mine;
 
     for (let hint_index = 0; hint_index < hints.length; hint_index++) {
       const hint = hints[hint_index];
       const gameName = client.players.game(hint.receiving_player);
-      const findingPlayerGame = client.players.game(hint.finding_player);
+      const findingPlayerName = client.players.game(hint.finding_player);
 
-      renderList.push(
-        <tr key={game_index.toString() + hint_index.toString()}>
-          <td>{client.players.name(hint.receiving_player)}</td>
-          <td>{client.players.name(hint.finding_player)}</td>
-          <td>{client.items.name(gameName, hint.item)}</td>
-          <td>{client.locations.name(findingPlayerGame, hint.location)}</td>
-          <td>{hint.found.toString()}</td>
-        </tr>,
+      hint.playerName = client.players.name(hint.receiving_player);
+      hint.findingPlayerName = client.players.name(hint.finding_player);
+      hint.itemName = client.items.name(gameName, hint.item);
+      hint.locationName = client.locations.name(
+        findingPlayerName,
+        hint.location,
       );
+      hint.isFound = hint.found.toString();
+
+      // Do not add if it already exists
+      let isDuplicate = false;
+      for (let i = 0; i < hintList.length; i++) {
+        if (
+          hintList[i].location === hint.location &&
+          hintList[i].item === hint.item &&
+          hintList[i].receiving_player === hint.receiving_player &&
+          hintList[i].finding_player === hint.finding_player
+        ) {
+          isDuplicate = true;
+          break;
+        }
+      }
+
+      if (!isDuplicate) {
+        hintList.push(hint);
+      }
+    }
+  }
+
+  setHintData(hintList);
+}
+
+function renderHints(pageState, hintData, filterData) {
+  let renderList = [];
+  let hintFilterSelection = "";
+  let foundFilterSelection = "";
+
+  for (let i = 0; i < filterData.hintFilter.length; i++) {
+    if (filterData.hintFilter[i].checked === true) {
+      hintFilterSelection = filterData.hintFilter[i].name;
+    }
+  }
+
+  for (let i = 0; i < filterData.foundFilter.length; i++) {
+    if (filterData.foundFilter[i].checked === true) {
+      foundFilterSelection = filterData.foundFilter[i].name;
+    }
+  }
+
+  // Sort list by player name
+  const hints = hintData.sort(function (a, b) {
+    let x = a.playerName.toLowerCase();
+    let y = b.playerName.toLowerCase();
+    if (x > y) {
+      return 1;
+    }
+    if (x < y) {
+      return -1;
+    }
+    return 0;
+  });
+
+  for (let i = 0; i < hints.length; i++) {
+    const hint = hints[i];
+
+    let render = [];
+    render.push(
+      <tr key={hint.finding_player.toString() + hint.location.toString()}>
+        <td>{hint.playerName}</td>
+        <td>{hint.findingPlayerName}</td>
+        <td>{hint.itemName}</td>
+        <td>{hint.locationName}</td>
+        <td>{hint.isFound}</td>
+      </tr>,
+    );
+    if (hintFilterSelection === "My Hints") {
+      for (let j = 0; j < pageState.clients.length; j++) {
+        if (hint.playerName === pageState.clients[j].player) {
+          if (
+            foundFilterSelection === "All" ||
+            (foundFilterSelection === "Found" && hint.isFound === "true") ||
+            (foundFilterSelection === "Not Found" && hint.isFound === "false")
+          ) {
+            renderList.push(render);
+          }
+        }
+      }
+    } else if (hintFilterSelection === "Assigned Hints") {
+      for (let j = 0; j < pageState.clients.length; j++) {
+        if (hint.findingPlayerName === pageState.clients[j].player) {
+          if (
+            foundFilterSelection === "All" ||
+            (foundFilterSelection === "Found" && hint.isFound === "true") ||
+            (foundFilterSelection === "Not Found" && hint.isFound === "false")
+          ) {
+            renderList.push(render);
+          }
+        }
+      }
+    } else {
+      if (
+        foundFilterSelection === "All" ||
+        (foundFilterSelection === "Found" && hint.isFound === "true") ||
+        (foundFilterSelection === "Not Found" && hint.isFound === "false")
+      ) {
+        renderList.push(render);
+      }
     }
   }
 
@@ -227,6 +340,8 @@ function App() {
     show_servers: localStorage.getItem("servers") === null ? false : true,
     show_add_server: true,
     servers: JSON.parse(localStorage.getItem("servers")),
+    clients: [],
+    hintFilter: [],
   });
 
   let submitFieldDataDefault = {
@@ -238,6 +353,38 @@ function App() {
   const [submitFieldData, setSubmitFieldData] = useState(
     submitFieldDataDefault,
   );
+
+  const [filterData, setFilterData] = useState({
+    hintFilter: [
+      { name: "All", checked: true },
+      { name: "My Hints", checked: false },
+      { name: "Assigned Hints", checked: false },
+    ],
+    foundFilter: [
+      { name: "All", checked: true },
+      { name: "Found", checked: false },
+      { name: "Not Found", checked: false },
+    ],
+  });
+
+  // TODO: Can this be combined with `filterData`
+  const [playerFilter, setPlayerFilter] = useState({
+    playerList: [
+      {
+        name: "All",
+        checked: true,
+      },
+    ],
+  });
+
+  const [hintData, setHintData] = useState([]);
+
+  useEffect(() => {
+    if (pageState.state === "retrieve_hints") {
+      retrieveHints(pageState, hintData, setHintData);
+      dynamicFilter(pageState, playerFilter, setPlayerFilter);
+    }
+  }, [pageState.state]);
 
   const handleSubmit = (event) => {
     // TODO: Add data validation
@@ -383,7 +530,44 @@ function App() {
       createClients(pageState, setPageState);
       page = <Container fluid></Container>;
     } else if (pageState.state === "retrieve_hints") {
-      page = retrieveHints(pageState, setPageState);
+      initialClient.disconnect();
+      let hints = (
+        <Container fluid>
+          <React.Fragment>
+            {/* {retrieveHints(pageState, hintData)} */}
+            {renderHints(pageState, hintData, filterData)}
+          </React.Fragment>
+        </Container>
+      );
+
+      page = (
+        <React.Fragment>
+          <Col lg="6" xl="3" className="col-padding">
+            <Dropdown
+              title="Hints Filter"
+              id="hintFilter"
+              value={filterData}
+              valueSetter={setFilterData}
+            />
+            <Dropdown
+              title="Found Filter"
+              id="foundFilter"
+              value={filterData}
+              valueSetter={setFilterData}
+            />
+            <Dropdown
+              title="Player Filter"
+              id="playerList"
+              value={playerFilter}
+              valueSetter={setPlayerFilter}
+            />
+          </Col>
+
+          <Col lg="6" xl="3" className="col-padding">
+            {hints}
+          </Col>
+        </React.Fragment>
+      );
     } else {
       page = <div></div>;
     }
