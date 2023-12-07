@@ -39,22 +39,21 @@ function pageStateReducer(state, action) {
         selected_server: action.server,
         players: action.players,
       };
-    case "retrieve_hints":
+    case "create_clients":
       return {
-        state: "retrieve_hints",
+        state: "create_clients",
         hide_page: false,
         servers: JSON.parse(localStorage.getItem("servers")),
         selected_server: action.server,
         clients: [],
       };
-    case "done": {
+    case "retrieve_hints": {
       return {
-        state: "done",
+        state: "retrieve_hints",
         hide_page: false,
         servers: JSON.parse(localStorage.getItem("servers")),
         selected_server: action.server,
         clients: action.clients,
-        hints: action.hints,
       };
     }
     default:
@@ -80,7 +79,7 @@ function renderServerCards(pageState, setPageState) {
 
         if ("players" in foo[event.nickname]) {
           setPageState({
-            type: "retrieve_hints",
+            type: "create_clients",
             servers: pageState.servers,
             server: event.nickname,
           });
@@ -128,16 +127,17 @@ function renderServerCards(pageState, setPageState) {
   return <Col>{cardList}</Col>;
 }
 
-function getAllHints(pageState, setPageState) {
+function createClients(pageState, setPageState) {
   // TODO: Clean this up.  Separate out connection logic and hint logic.
   // There needs to be a function that adds all the clients to an array
-  // when the state is "adding clients".  After clients are added, migrate to "retrieve_hints" stage
-  // Loop on the "retrieve_hints" stage in till all games have hints
+  // when the state is "adding clients".  After clients are added, migrate to "create_clients" stage
+  // Loop on the "create_clients" stage in till all games have hints
   // Move hint logic to its own file
   const server = pageState.servers[pageState.selected_server];
   const players = server.players;
-  let parsedHints = [];
+  let clients = pageState.clients;
 
+  // Loop through each player/game and create a client
   for (let i = 0; i < players.length; i++) {
     const client = new Client();
     const player = players[i];
@@ -149,47 +149,75 @@ function getAllHints(pageState, setPageState) {
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
     };
 
+    // Archipelago will return empty results if you query right after a client is connected
+    // Therefore we need to wait ~5s before continuing
+    const waitForArchipelago = () => {
+      setTimeout(() => {
+        setPageState({ type: "retrieve_hints", clients: clients });
+      }, 500);
+    };
+
     try {
       client.connect(connectionInfo).then(() => {
         console.log(`Connected to the server for player: ${player.name}`);
-        let clients = pageState.clients;
         clients.push(client);
 
         if (
           pageState.servers[pageState.selected_server].players.length ===
           pageState.clients.length
         ) {
-          for (let i = 0; i < pageState.clients.length; i++) {
-            const client = pageState.clients[i];
-            const hints = client.hints.mine;
-
-            for (let j = 0; j < hints.length; j++) {
-              const hint = hints[j];
-              const gameName = client.players.game(hint.receiving_player);
-              const findingPlayerGame = client.players.game(
-                hint.finding_player,
-              );
-
-              parsedHints.push({
-                receiving_player: client.players.name(hint.receiving_player),
-                finding_player: client.players.name(hint.finding_player),
-                item: client.items.name(gameName, hint.item),
-                location: client.locations.name(
-                  findingPlayerGame,
-                  hint.location,
-                ),
-                hint: hint.found.toString(),
-              });
-            }
-          }
-
-          setPageState({ type: "done", clients: clients, hints: parsedHints });
+          waitForArchipelago();
         }
       });
     } catch (err) {
       console.error("Failed to connect:", err);
     }
   }
+}
+
+function retrieveHints(pageState, setPageState) {
+  let renderList = [];
+
+  for (
+    let game_index = 0;
+    game_index < pageState.clients.length;
+    game_index++
+  ) {
+    const client = pageState.clients[game_index];
+    const hints = client.hints.mine;
+
+    for (let hint_index = 0; hint_index < hints.length; hint_index++) {
+      const hint = hints[hint_index];
+      const gameName = client.players.game(hint.receiving_player);
+      const findingPlayerGame = client.players.game(hint.finding_player);
+
+      renderList.push(
+        <tr key={game_index.toString() + hint_index.toString()}>
+          <td>{client.players.name(hint.receiving_player)}</td>
+          <td>{client.players.name(hint.finding_player)}</td>
+          <td>{client.items.name(gameName, hint.item)}</td>
+          <td>{client.locations.name(findingPlayerGame, hint.location)}</td>
+          <td>{hint.found.toString()}</td>
+        </tr>,
+      );
+    }
+  }
+
+  return (
+    <Container fluid>
+      <thead>
+        <tr>
+          <th>Receiving Player</th>
+          <th>Finding Player</th>
+          <th>Item</th>
+          <th>Location</th>
+          <th>Found</th>
+          <th style={{ borderStyle: "hidden", width: "85px" }}></th>
+        </tr>
+      </thead>
+      <tbody>{renderList}</tbody>
+    </Container>
+  );
 }
 
 function App() {
@@ -235,7 +263,7 @@ function App() {
     servers[pageState.selected_server].players = selectedPlayers;
     localStorage.setItem("servers", JSON.stringify(servers));
     setPageState({
-      type: "retrieve_hints",
+      type: "create_clients",
       servers: servers,
       server: pageState.selected_server,
     });
@@ -351,46 +379,11 @@ function App() {
           </Button>
         </Container>
       );
-    } else if (pageState.state === "retrieve_hints") {
-      getAllHints(pageState, setPageState);
+    } else if (pageState.state === "create_clients") {
+      createClients(pageState, setPageState);
       page = <Container fluid></Container>;
-    } else if (pageState.state === "done") {
-      let renderList = [];
-      console.log(pageState);
-      for (let i = 0; i < pageState.clients.length; i++) {
-        const client = pageState.clients[i];
-        const hints = client.hints.mine;
-        for (let j = 0; j < hints.length; j++) {
-          const hint = hints[j];
-          const gameName = client.players.game(hint.receiving_player);
-          const findingPlayerGame = client.players.game(hint.finding_player);
-
-          renderList.push(
-            <tr key={j}>
-              <td>{client.players.name(hint.receiving_player)}</td>
-              <td>{client.players.name(hint.finding_player)}</td>
-              <td>{client.items.name(gameName, hint.item)}</td>
-              <td>{client.locations.name(findingPlayerGame, hint.location)}</td>
-              <td>{hint.found.toString()}</td>
-            </tr>,
-          );
-        }
-      }
-      page = (
-        <Container fluid>
-          <thead>
-            <tr>
-              <th>Receiving Player</th>
-              <th>Finding Player</th>
-              <th>Item</th>
-              <th>Location</th>
-              <th>Found</th>
-              <th style={{ borderStyle: "hidden", width: "85px" }}></th>
-            </tr>
-          </thead>
-          <tbody>{renderList}</tbody>
-        </Container>
-      );
+    } else if (pageState.state === "retrieve_hints") {
+      page = retrieveHints(pageState, setPageState);
     } else {
       page = <div></div>;
     }
