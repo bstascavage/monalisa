@@ -13,7 +13,11 @@ import {
   Container,
 } from "reactstrap";
 
-import { Client, ITEMS_HANDLING_FLAGS } from "archipelago.js";
+import {
+  Client,
+  ITEMS_HANDLING_FLAGS,
+  SERVER_PACKET_TYPE,
+} from "archipelago.js";
 
 const initialClient = new Client();
 
@@ -129,7 +133,7 @@ function renderServerCards(pageState, setPageState) {
   return <Col>{cardList}</Col>;
 }
 
-function createClients(pageState, setPageState) {
+function createClients(pageState, setPageState, hintData, setHintData) {
   const server = pageState.servers[pageState.selected_server];
   const players = server.players;
   let clients = pageState.clients;
@@ -166,10 +170,51 @@ function createClients(pageState, setPageState) {
           waitForArchipelago();
         }
       });
+      client.addListener(SERVER_PACKET_TYPE.PRINT_JSON, (packet, message) => {
+        if (packet.type === "Hint" || packet.type === "ItemSend") {
+          retrieveHints(pageState, setHintData, packet);
+        }
+      });
     } catch (err) {
       console.error("Failed to connect:", err);
     }
   }
+}
+
+function retrieveHintMetadata(
+  client,
+  receiving_player,
+  finding_player,
+  item_id,
+  item_flags,
+  location_id,
+  found,
+) {
+  // Looks up human-readable metadata for hints, since Archipelago only returns player/item/location ids
+  let hint = {};
+  const gameName = client.players.game(receiving_player);
+  const findingPlayerName = client.players.game(finding_player);
+
+  // Static values that might be used in the future
+  hint.Class = "Hint";
+  hint.entrance = "";
+
+  // Perserving original, non-parsed hint data from the server
+  hint.finding_player = finding_player;
+  hint.receiving_player = receiving_player;
+  hint.item = item_id;
+  hint.item_flags = item_flags;
+  hint.location = location_id;
+  hint.found = found;
+
+  // Parsing hint data for more readable fields
+  hint.playerName = client.players.name(receiving_player);
+  hint.findingPlayerName = client.players.name(finding_player);
+  hint.itemName = client.items.name(gameName, item_id);
+  hint.locationName = client.locations.name(findingPlayerName, location_id);
+  hint.isFound = found.toString();
+
+  return hint;
 }
 
 function dynamicFilter(pageState, playerFilter, setPlayerFilter) {
@@ -190,7 +235,7 @@ function dynamicFilter(pageState, playerFilter, setPlayerFilter) {
   setPlayerFilter({ playerList: playerList });
 }
 
-function retrieveHints(pageState, hintData, setHintData) {
+function retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
   let hintList = [];
 
   for (
@@ -202,35 +247,50 @@ function retrieveHints(pageState, hintData, setHintData) {
     const hints = client.hints.mine;
 
     for (let hint_index = 0; hint_index < hints.length; hint_index++) {
-      const hint = hints[hint_index];
-      const gameName = client.players.game(hint.receiving_player);
-      const findingPlayerName = client.players.game(hint.finding_player);
+      let hint = hints[hint_index];
 
-      hint.playerName = client.players.name(hint.receiving_player);
-      hint.findingPlayerName = client.players.name(hint.finding_player);
-      hint.itemName = client.items.name(gameName, hint.item);
-      hint.locationName = client.locations.name(
-        findingPlayerName,
+      // If `retrieveHints` is called because of an `ItemSend` server event, that means the hint has been found
+      // I have to do this because the Archipelago hint list only updates when you create a new client or a new hint is issued
+      // It is not updated if a hint's status changes from 'not found' to 'found'...for some reason
+      if (typeof serverUpdateEvent != "undefined") {
+        if (
+          serverUpdateEvent.type === "ItemSend" &&
+          hint.item === serverUpdateEvent.item.item &&
+          hint.location === serverUpdateEvent.item.location &&
+          hint.finding_player === serverUpdateEvent.item.player &&
+          hint.receiving_player === serverUpdateEvent.receiving
+        ) {
+          hint.found = true;
+        }
+      }
+
+      let parsedHint = retrieveHintMetadata(
+        client,
+        hint.receiving_player,
+        hint.finding_player,
+        hint.item,
+        hint.item_flags,
         hint.location,
+        hint.found,
       );
-      hint.isFound = hint.found.toString();
 
       // Do not add if it already exists
       let isDuplicate = false;
       for (let i = 0; i < hintList.length; i++) {
         if (
-          hintList[i].location === hint.location &&
-          hintList[i].item === hint.item &&
-          hintList[i].receiving_player === hint.receiving_player &&
-          hintList[i].finding_player === hint.finding_player
+          hintList[i].location === parsedHint.location &&
+          hintList[i].item === parsedHint.item &&
+          hintList[i].receiving_player === parsedHint.receiving_player &&
+          hintList[i].finding_player === parsedHint.finding_player
         ) {
           isDuplicate = true;
+          hintList[i] = parsedHint;
           break;
         }
       }
 
       if (!isDuplicate) {
-        hintList.push(hint);
+        hintList.push(parsedHint);
       }
     }
   }
@@ -256,14 +316,12 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
     }
   }
 
-  console.log(filterData);
   for (let i = 0; i < playerFilter.playerList.length; i++) {
     if (playerFilter.playerList[i].checked === true) {
       playerFilterSelection = playerFilter.playerList[i].name;
     }
   }
 
-  console.log(playerFilterSelection);
   // Sort list by player name
   const hints = hintData.sort(function (a, b) {
     let x = a.playerName.toLowerCase();
@@ -372,10 +430,11 @@ function App() {
   });
 
   const [hintData, setHintData] = useState([]);
+  console.log(hintData);
 
   useEffect(() => {
     if (pageState.state === "retrieve_hints") {
-      retrieveHints(pageState, hintData, setHintData);
+      retrieveHints(pageState, setHintData);
       dynamicFilter(pageState, playerFilter, setPlayerFilter);
     }
   }, [pageState.state]);
@@ -521,14 +580,13 @@ function App() {
         </Container>
       );
     } else if (pageState.state === "create_clients") {
-      createClients(pageState, setPageState);
+      createClients(pageState, setPageState, hintData, setHintData);
       page = <Container fluid></Container>;
     } else if (pageState.state === "retrieve_hints") {
       initialClient.disconnect();
       let hints = (
         <Container fluid>
           <React.Fragment>
-            {/* {retrieveHints(pageState, hintData)} */}
             {renderHints(pageState, hintData, filterData, playerFilter)}
           </React.Fragment>
         </Container>
