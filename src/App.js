@@ -238,10 +238,11 @@ function retrieveHints(pageState, hintData, setHintData) {
   setHintData(hintList);
 }
 
-function renderHints(pageState, hintData, filterData) {
+function renderHints(pageState, hintData, filterData, playerFilter) {
   let renderList = [];
   let hintFilterSelection = "";
   let foundFilterSelection = "";
+  let playerFilterSelection = "";
 
   for (let i = 0; i < filterData.hintFilter.length; i++) {
     if (filterData.hintFilter[i].checked === true) {
@@ -255,6 +256,14 @@ function renderHints(pageState, hintData, filterData) {
     }
   }
 
+  console.log(filterData);
+  for (let i = 0; i < playerFilter.playerList.length; i++) {
+    if (playerFilter.playerList[i].checked === true) {
+      playerFilterSelection = playerFilter.playerList[i].name;
+    }
+  }
+
+  console.log(playerFilterSelection);
   // Sort list by player name
   const hints = hintData.sort(function (a, b) {
     let x = a.playerName.toLowerCase();
@@ -281,37 +290,22 @@ function renderHints(pageState, hintData, filterData) {
         <td>{hint.isFound}</td>
       </tr>,
     );
-    if (hintFilterSelection === "My Hints") {
-      for (let j = 0; j < pageState.clients.length; j++) {
-        if (hint.playerName === pageState.clients[j].player) {
-          if (
-            foundFilterSelection === "All" ||
-            (foundFilterSelection === "Found" && hint.isFound === "true") ||
-            (foundFilterSelection === "Not Found" && hint.isFound === "false")
-          ) {
-            renderList.push(render);
-          }
-        }
-      }
-    } else if (hintFilterSelection === "Assigned Hints") {
-      for (let j = 0; j < pageState.clients.length; j++) {
-        if (hint.findingPlayerName === pageState.clients[j].player) {
-          if (
-            foundFilterSelection === "All" ||
-            (foundFilterSelection === "Found" && hint.isFound === "true") ||
-            (foundFilterSelection === "Not Found" && hint.isFound === "false")
-          ) {
-            renderList.push(render);
-          }
-        }
-      }
-    } else {
+
+    for (let j = 0; j < pageState.clients.length; j++) {
       if (
-        foundFilterSelection === "All" ||
-        (foundFilterSelection === "Found" && hint.isFound === "true") ||
-        (foundFilterSelection === "Not Found" && hint.isFound === "false")
+        ((hintFilterSelection === "My Hints" &&
+          hint.playerName === pageState.clients[j].player) ||
+          (hintFilterSelection === "Assigned Hints" &&
+            hint.findingPlayerName === pageState.clients[j].player) ||
+          hintFilterSelection === "All") &&
+        (foundFilterSelection === "All" ||
+          (foundFilterSelection === "Found" && hint.isFound === "true") ||
+          (foundFilterSelection === "Not Found" && hint.isFound === "false")) &&
+        (playerFilterSelection === "All" ||
+          playerFilterSelection === hint.playerName)
       ) {
         renderList.push(render);
+        break;
       }
     }
   }
@@ -535,7 +529,7 @@ function App() {
         <Container fluid>
           <React.Fragment>
             {/* {retrieveHints(pageState, hintData)} */}
-            {renderHints(pageState, hintData, filterData)}
+            {renderHints(pageState, hintData, filterData, playerFilter)}
           </React.Fragment>
         </Container>
       );
@@ -556,7 +550,7 @@ function App() {
               valueSetter={setFilterData}
             />
             <Dropdown
-              title="Player Filter"
+              title="Game Filter"
               id="playerList"
               value={playerFilter}
               valueSetter={setPlayerFilter}
