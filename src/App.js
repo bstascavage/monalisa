@@ -217,7 +217,7 @@ function retrieveHintMetadata(
   return hint;
 }
 
-function dynamicFilter(pageState, playerFilter, setPlayerFilter) {
+function dynamicFilter(pageState, setPlayerFilter) {
   // Creates a filter for each game, which is not static
   let playerList = [{ name: "All", checked: true }];
 
@@ -435,9 +435,9 @@ function App() {
   useEffect(() => {
     if (pageState.state === "retrieve_hints") {
       retrieveHints(pageState, setHintData);
-      dynamicFilter(pageState, playerFilter, setPlayerFilter);
+      dynamicFilter(pageState, setPlayerFilter);
     }
-  }, [pageState.state]);
+  }, [pageState]);
 
   const handleSubmit = (event) => {
     // TODO: Add data validation
