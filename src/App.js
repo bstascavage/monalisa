@@ -1,5 +1,5 @@
 import "./App.css";
-import TextInput from "./TextInput";
+import "bootstrap/dist/css/bootstrap.min.css";
 import CheckBox from "./Checkbox";
 import Dropdown from "./Dropdown";
 import React, { useReducer, useState, useEffect } from "react";
@@ -12,6 +12,10 @@ import {
   Row,
   Container,
   CloseButton,
+  Form,
+  FormGroup,
+  Label,
+  Input,
 } from "reactstrap";
 
 import {
@@ -460,6 +464,7 @@ function App() {
     server: "archipelago.gg",
     port: "",
     playerName: "",
+    gameName: "",
     nickname: "",
   };
   const [submitFieldData, setSubmitFieldData] = useState(
@@ -501,7 +506,8 @@ function App() {
   const handleSubmit = (event) => {
     // TODO: Add data validation
     // TODO: Check if server exists
-    if (!isValidPort(Number(submitFieldData.port))) {
+    event.preventDefault();
+    if (!isValidPort(Number(event.target.port.value))) {
       setPageState({
         type: "error",
         msg: "Something is wrong with your connection info.  Please validate and try again.",
@@ -509,9 +515,16 @@ function App() {
     } else {
       let servers = JSON.parse(localStorage.getItem("servers"));
       servers = servers === null ? {} : servers;
-      servers[submitFieldData.nickname] = submitFieldData;
+      servers[event.target.nickname.value] = {
+        server: event.target.server.value,
+        port: event.target.port.value,
+        gameName: event.target.gameName.value,
+        playerName: event.target.playerName.value,
+        nickname: event.target.nickname.value,
+      };
       localStorage.setItem("servers", JSON.stringify(servers));
       setPageState({ type: "server_list", servers: servers });
+      setSubmitFieldData(submitFieldDataDefault);
     }
   };
 
@@ -545,74 +558,100 @@ function App() {
       let servers;
       if (pageState.show_add_server) {
         add_servers = (
-          <Container fluid>
-            <form onSubmit={handleSubmit}>
-              <div className="App">
-                <Row className="stats-row">
-                  <Col lg="6" xl="3" className="col-padding">
-                    Server
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    <TextInput
-                      id="server"
-                      placeholder="archipelago.gg"
-                      value={submitFieldData}
-                      valueSetter={setSubmitFieldData}
-                    />
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    Port
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    <TextInput
-                      id="port"
-                      placeholder=""
-                      value={submitFieldData}
-                      valueSetter={setSubmitFieldData}
-                    />
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    Game Name
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    <TextInput
-                      id="gameName"
-                      placeholder=""
-                      value={submitFieldData}
-                      valueSetter={setSubmitFieldData}
-                    />
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    Player
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    <TextInput
-                      id="playerName"
-                      placeholder=""
-                      value={submitFieldData}
-                      valueSetter={setSubmitFieldData}
-                    />
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    Server Nickname
-                  </Col>
-                  <Col lg="6" xl="3" className="col-padding">
-                    <TextInput
-                      id="nickname"
-                      placeholder=""
-                      value={submitFieldData}
-                      valueSetter={setSubmitFieldData}
-                    />
-                  </Col>
-                </Row>
-              </div>
-              <div className="submit-container" id="submit-container">
-                <Button color="primary" type="submit">
+          <Form onSubmit={handleSubmit}>
+            <FormGroup row>
+              <Label for="server" sm={2}>
+                Server
+              </Label>
+              <Col sm={10}>
+                <Input
+                  id="server"
+                  name="server"
+                  value={submitFieldData.server}
+                  onChange={(e) => {
+                    setSubmitFieldData({ server: e.value });
+                  }}
+                  type="text"
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup row>
+              <Label for="port" sm={2}>
+                Port
+              </Label>
+              <Col sm={10}>
+                <Input
+                  id="port"
+                  name="port"
+                  type="text"
+                  value={submitFieldData.port}
+                  onChange={(e) => {
+                    setSubmitFieldData({ port: e.value });
+                  }}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup row>
+              <Label for="gameName" sm={2}>
+                Game Name
+              </Label>
+              <Col sm={10}>
+                <Input
+                  id="gameName"
+                  name="gameName"
+                  type="text"
+                  value={submitFieldData.gameName}
+                  onChange={(e) => {
+                    setSubmitFieldData({ gameName: e.value });
+                  }}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup row>
+              <Label for="playerName" sm={2}>
+                Player Name
+              </Label>
+              <Col sm={10}>
+                <Input
+                  id="playerName"
+                  name="playerName"
+                  type="text"
+                  value={submitFieldData.playerName}
+                  onChange={(e) => {
+                    setSubmitFieldData({ playerName: e.value });
+                  }}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup row>
+              <Label for="nickname" sm={2}>
+                Nickname
+              </Label>
+              <Col sm={10}>
+                <Input
+                  id="nickname"
+                  name="nickname"
+                  type="text"
+                  value={submitFieldData.nickname}
+                  onChange={(e) => {
+                    setSubmitFieldData({ nickname: e.value });
+                  }}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup check row>
+              <Col
+                sm={{
+                  offset: 2,
+                  size: 10,
+                }}
+              >
+                <Button type="submit" color="primary">
                   Submit
                 </Button>
-              </div>
-            </form>
-          </Container>
+              </Col>
+            </FormGroup>
+          </Form>
         );
       } else {
         add_servers = <div></div>;
