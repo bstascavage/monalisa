@@ -36,6 +36,11 @@ function pageStateReducer(state, action) {
         state: "connecting",
         hide_page: true,
       };
+    case "error":
+      return {
+        state: "error",
+        msg: action.msg,
+      };
     case "pick_players":
       return {
         state: "pick_players",
@@ -67,7 +72,7 @@ function pageStateReducer(state, action) {
 }
 
 function renderServerCards(pageState, setPageState) {
-  const connectServer = (event) => {
+  const connectServer = (event, setPageState) => {
     const connectionInfo = {
       hostname: event.server,
       port: Number(event.port),
@@ -84,24 +89,33 @@ function renderServerCards(pageState, setPageState) {
 
     try {
       setPageState({ type: "connecting" });
-      initialClient.connect(connectionInfo).then(() => {
-        console.log("Connected to the server");
-        const localConfig = JSON.parse(localStorage.getItem("servers"));
+      initialClient
+        .connect(connectionInfo)
+        .then(() => {
+          console.log("Connected to the server");
+          const localConfig = JSON.parse(localStorage.getItem("servers"));
 
-        if ("players" in localConfig[event.nickname]) {
+          if ("players" in localConfig[event.nickname]) {
+            setPageState({
+              type: "create_clients",
+              servers: pageState.servers,
+              server: event.nickname,
+            });
+          } else {
+            setPageState({
+              type: "pick_players",
+              players: initialClient.players.all,
+              server: event.nickname,
+            });
+          }
+        })
+        .catch((error) => {
+          console.error("Failed to connect:", error);
           setPageState({
-            type: "create_clients",
-            servers: pageState.servers,
-            server: event.nickname,
+            type: "error",
+            msg: "There is an issue connecting to the server.  Please check your connection info and try again",
           });
-        } else {
-          setPageState({
-            type: "pick_players",
-            players: initialClient.players.all,
-            server: event.nickname,
-          });
-        }
-      });
+        });
     } catch (err) {
       console.error("Failed to connect:", err);
     }
@@ -127,7 +141,10 @@ function renderServerCards(pageState, setPageState) {
               Port: {value.port}
             </span>
             <br></br>
-            <Button color="primary" onClick={() => connectServer(value)}>
+            <Button
+              color="primary"
+              onClick={() => connectServer(value, setPageState)}
+            >
               Connect
             </Button>
           </Row>
@@ -248,6 +265,7 @@ function dynamicFilter(pageState, setPlayerFilter) {
 }
 
 function retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
+  // Loops through all clients and retrieves all hints for each game
   let hintList = [];
 
   for (
@@ -397,6 +415,27 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
   );
 }
 
+function isValidPort(port) {
+  // Validates that a number is a valid port.  Written by ChatGPT
+  // Ensure the port is a number
+  if (typeof port !== "number") {
+    return false;
+  }
+
+  // Check if the port is an integer
+  if (!Number.isInteger(port)) {
+    return false;
+  }
+
+  // Check if the port is within the valid range (1 to 65535)
+  if (port < 1 || port > 65535) {
+    return false;
+  }
+
+  // If all checks pass, the port is valid
+  return true;
+}
+
 function App() {
   const [pageState, setPageState] = useReducer(pageStateReducer, {
     state: "server_list",
@@ -453,11 +492,18 @@ function App() {
   const handleSubmit = (event) => {
     // TODO: Add data validation
     // TODO: Check if server exists
-    let servers = JSON.parse(localStorage.getItem("servers"));
-    servers = servers === null ? {} : servers;
-    servers[submitFieldData.nickname] = submitFieldData;
-    localStorage.setItem("servers", JSON.stringify(servers));
-    setPageState({ type: "server_list", servers: servers });
+    if (!isValidPort(submitFieldData.port)) {
+      setPageState({
+        type: "error",
+        msg: "Something is wrong with your connection info.  Please validate and try again.",
+      });
+    } else {
+      let servers = JSON.parse(localStorage.getItem("servers"));
+      servers = servers === null ? {} : servers;
+      servers[submitFieldData.nickname] = submitFieldData;
+      localStorage.setItem("servers", JSON.stringify(servers));
+      setPageState({ type: "server_list", servers: servers });
+    }
   };
 
   const selectPlayers = (event) => {
@@ -580,6 +626,9 @@ function App() {
           {servers}
         </React.Fragment>
       );
+    } else if (pageState.state === "error") {
+      // page = <div>There is an issue connecting to the server.  Please check your connection info and try again</div>
+      page = <React.Fragment>{pageState.msg}</React.Fragment>;
     } else if (pageState.state === "pick_players") {
       page = (
         <Container fluid>
