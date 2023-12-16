@@ -11,6 +11,7 @@ import {
   Col,
   Row,
   Container,
+  CloseButton,
 } from "reactstrap";
 
 import {
@@ -122,6 +123,13 @@ function renderServerCards(pageState, setPageState) {
   };
 
   let cardList = [];
+
+  const deleteServer = (event) => {
+    delete pageState.servers[event.nickname];
+    localStorage.setItem("servers", JSON.stringify(pageState.servers));
+    setPageState({ type: "server_list", servers: pageState.servers });
+  };
+
   for (const [key, value] of Object.entries(pageState.servers)) {
     cardList.push(
       <Card
@@ -134,6 +142,7 @@ function renderServerCards(pageState, setPageState) {
           <Row>
             <CardTitle tag="h5" className="text-uppercase text-muted mb-0">
               {key}
+              <CloseButton onClick={() => deleteServer(value)} />
             </CardTitle>
             <span className="h2 font-weight-bold mb-0">
               Server: {value.server}
@@ -492,7 +501,7 @@ function App() {
   const handleSubmit = (event) => {
     // TODO: Add data validation
     // TODO: Check if server exists
-    if (!isValidPort(submitFieldData.port)) {
+    if (!isValidPort(Number(submitFieldData.port))) {
       setPageState({
         type: "error",
         msg: "Something is wrong with your connection info.  Please validate and try again.",
