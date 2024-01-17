@@ -71,9 +71,15 @@ function renderServerCards(pageState, setPageState) {
     const connectionInfo = {
       hostname: event.server,
       port: Number(event.port),
+      protocol: "wss",
       game: event.gameName,
       name: event.playerName,
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
+      version: {
+        build: 0,
+        major: 4,
+        minor: 4,
+      },
     };
 
     try {
@@ -145,6 +151,7 @@ function createClients(pageState, setPageState, hintData, setHintData) {
     const connectionInfo = {
       hostname: server.server,
       port: Number(server.port),
+      protocol: "wss",
       game: player.game,
       name: player.name,
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
