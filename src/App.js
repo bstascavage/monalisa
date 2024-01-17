@@ -148,6 +148,11 @@ function createClients(pageState, setPageState, hintData, setHintData) {
       game: player.game,
       name: player.name,
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
+      version: {
+        build: 0,
+        major: 4,
+        minor: 4,
+      },
     };
 
     // Archipelago will return empty results if you query right after a client is connected
@@ -430,7 +435,6 @@ function App() {
   });
 
   const [hintData, setHintData] = useState([]);
-  console.log(hintData);
 
   useEffect(() => {
     if (pageState.state === "retrieve_hints") {
@@ -471,7 +475,6 @@ function App() {
 
   let page;
 
-  console.log(pageState);
   if (pageState.hide_page) {
     page = <div></div>;
   } else {
