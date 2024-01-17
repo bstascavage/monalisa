@@ -430,7 +430,6 @@ function App() {
   });
 
   const [hintData, setHintData] = useState([]);
-  console.log(hintData);
 
   useEffect(() => {
     if (pageState.state === "retrieve_hints") {
@@ -471,7 +470,6 @@ function App() {
 
   let page;
 
-  console.log(pageState);
   if (pageState.hide_page) {
     page = <div></div>;
   } else {
