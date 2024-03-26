@@ -9,13 +9,16 @@ import {
   CardTitle,
   Button,
   Col,
-  Row,
+  Modal,
+  ModalHeader,
+  ModalBody,
   Container,
   CloseButton,
   Form,
   FormGroup,
   Label,
   Input,
+  CardText,
 } from "reactstrap";
 
 import {
@@ -32,9 +35,25 @@ function pageStateReducer(state, action) {
       return {
         state: "server_list",
         hide_page: false,
-        show_servers: localStorage.getItem("servers") === null ? false : true,
-        show_add_server: true,
+        show_servers:
+          localStorage.getItem("servers") === null ||
+          JSON.stringify(localStorage.getItem("servers")) === '"{}"'
+            ? false
+            : true,
         servers: action.servers,
+        show_add_server: false,
+      };
+    case "add_server":
+      return {
+        state: "add_server",
+        hide_page: false,
+        show_servers:
+          localStorage.getItem("servers") === null ||
+          JSON.stringify(localStorage.getItem("servers")) === '"{}"'
+            ? false
+            : true,
+        servers: action.servers,
+        show_add_server: true,
       };
     case "connecting":
       return {
@@ -137,36 +156,41 @@ function renderServerCards(pageState, setPageState) {
   for (const [key, value] of Object.entries(pageState.servers)) {
     cardList.push(
       <Card
-        // style={{ width: "100%" }}
-        // style={{ height: 60 }}
+        style={{
+          width: "18rem",
+        }}
         id={key}
         key={key}
       >
         <CardBody>
-          <Row>
-            <CardTitle tag="h5" className="text-uppercase text-muted mb-0">
-              {key}
-              <CloseButton onClick={() => deleteServer(value)} />
-            </CardTitle>
-            <span className="h2 font-weight-bold mb-0">
-              Server: {value.server}
-              <br></br>
-              Port: {value.port}
-            </span>
+          <CardTitle tag="h5" className="text-uppercase mb-0">
+            <div className="card-header-flex">
+              <div style={{ fontSize: "24px" }}>{key}</div>
+              <CloseButton
+                style={{ height: "7px", width: "7px" }}
+                onClick={() => deleteServer(value)}
+              />
+            </div>
+          </CardTitle>
+          <CardText>
+            Server: {value.server}
             <br></br>
+            Port: {value.port}
+          </CardText>
+          <div className="card-connect-button">
             <Button
               color="primary"
               onClick={() => connectServer(value, setPageState)}
             >
               Connect
             </Button>
-          </Row>
+          </div>
         </CardBody>
       </Card>,
     );
   }
 
-  return <Col>{cardList}</Col>;
+  return <div className="server-list">{cardList}</div>;
 }
 
 function createClients(pageState, setPageState, hintData, setHintData) {
@@ -292,9 +316,9 @@ function retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
     for (let hint_index = 0; hint_index < hints.length; hint_index++) {
       let hint = hints[hint_index];
 
-      // If `retrieveHints` is called because of an `ItemSend` server event, that means the hint has been found
-      // I have to do this because the Archipelago hint list only updates when you create a new client or a new hint is issued
-      // It is not updated if a hint's status changes from 'not found' to 'found'...for some reason
+      //  If `retrieveHints` is called because of an `ItemSend` server event, that means the hint has been found
+      //  I have to do this because the Archipelago hint list only updates when you create a new client or a new hint is issued
+      //  It is not updated if a hint's status changes from 'not found' to 'found'...for some reason
       if (typeof serverUpdateEvent != "undefined") {
         if (
           serverUpdateEvent.type === "ItemSend" &&
@@ -317,7 +341,7 @@ function retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
         hint.found,
       );
 
-      // Do not add if it already exists
+      //  Do not add if it already exists
       let isDuplicate = false;
       for (let i = 0; i < hintList.length; i++) {
         if (
@@ -453,8 +477,12 @@ function App() {
   const [pageState, setPageState] = useReducer(pageStateReducer, {
     state: "server_list",
     hide_page: false,
-    show_servers: localStorage.getItem("servers") === null ? false : true,
-    show_add_server: true,
+    show_servers:
+      localStorage.getItem("servers") === null ||
+      JSON.stringify(localStorage.getItem("servers")) === '"{}"'
+        ? false
+        : true,
+    show_add_server: false,
     servers: JSON.parse(localStorage.getItem("servers")),
     clients: [],
     hintFilter: [],
@@ -553,112 +581,126 @@ function App() {
   if (pageState.hide_page) {
     page = <div></div>;
   } else {
-    if (pageState.state === "server_list") {
+    if (pageState.state === "server_list" || pageState.state === "add_server") {
+      const addServer = (setPageState) => {
+        setPageState({ type: "add_server", servers: pageState.servers });
+      };
+
       let add_servers;
       let servers;
-      if (pageState.show_add_server) {
-        add_servers = (
-          <Form onSubmit={handleSubmit}>
-            <FormGroup row>
-              <Label for="server" sm={2}>
-                Server
-              </Label>
-              <Col sm={10}>
-                <Input
-                  id="server"
-                  name="server"
-                  value={submitFieldData.server}
-                  onChange={(e) => {
-                    setSubmitFieldData({ server: e.value });
-                  }}
-                  type="text"
-                />
-              </Col>
-            </FormGroup>
-            <FormGroup row>
-              <Label for="port" sm={2}>
-                Port
-              </Label>
-              <Col sm={10}>
-                <Input
-                  id="port"
-                  name="port"
-                  type="text"
-                  value={submitFieldData.port}
-                  onChange={(e) => {
-                    setSubmitFieldData({ port: e.value });
-                  }}
-                />
-              </Col>
-            </FormGroup>
-            <FormGroup row>
-              <Label for="gameName" sm={2}>
-                Game Name
-              </Label>
-              <Col sm={10}>
-                <Input
-                  id="gameName"
-                  name="gameName"
-                  type="text"
-                  value={submitFieldData.gameName}
-                  onChange={(e) => {
-                    setSubmitFieldData({ gameName: e.value });
-                  }}
-                />
-              </Col>
-            </FormGroup>
-            <FormGroup row>
-              <Label for="playerName" sm={2}>
-                Player Name
-              </Label>
-              <Col sm={10}>
-                <Input
-                  id="playerName"
-                  name="playerName"
-                  type="text"
-                  value={submitFieldData.playerName}
-                  onChange={(e) => {
-                    setSubmitFieldData({ playerName: e.value });
-                  }}
-                />
-              </Col>
-            </FormGroup>
-            <FormGroup row>
-              <Label for="nickname" sm={2}>
-                Nickname
-              </Label>
-              <Col sm={10}>
-                <Input
-                  id="nickname"
-                  name="nickname"
-                  type="text"
-                  value={submitFieldData.nickname}
-                  onChange={(e) => {
-                    setSubmitFieldData({ nickname: e.value });
-                  }}
-                />
-              </Col>
-            </FormGroup>
-            <FormGroup check row>
-              <Col
-                sm={{
-                  offset: 2,
-                  size: 10,
-                }}
-              >
-                <Button type="submit" color="primary">
-                  Submit
-                </Button>
-              </Col>
-            </FormGroup>
-          </Form>
-        );
-      } else {
-        add_servers = <div></div>;
-      }
+
+      // Toggles the "add server" modal off when the user clicks away
+      const toggle = () => {
+        setPageState({ type: "server_list", servers: pageState.servers });
+      };
+
+      add_servers = (
+        <div className="add-server-button">
+          <Modal isOpen={pageState.show_add_server} toggle={toggle}>
+            <ModalHeader cssModule={{ "modal-title": "w-100 text-center" }}>
+              Add a new server
+            </ModalHeader>
+            <ModalBody>
+              <Form onSubmit={handleSubmit}>
+                <FormGroup row>
+                  <Label for="server" sm={3}>
+                    Server
+                  </Label>
+                  <Col sm={8}>
+                    <Input
+                      id="server"
+                      name="server"
+                      value={submitFieldData.server}
+                      onChange={(e) => {
+                        setSubmitFieldData({ server: e.value });
+                      }}
+                      type="text"
+                    />
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label for="port" sm={3}>
+                    Port
+                  </Label>
+                  <Col sm={8}>
+                    <Input
+                      id="port"
+                      name="port"
+                      type="text"
+                      value={submitFieldData.port}
+                      onChange={(e) => {
+                        setSubmitFieldData({ port: e.value });
+                      }}
+                    />
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label for="gameName" sm={3}>
+                    Game Name
+                  </Label>
+                  <Col sm={8}>
+                    <Input
+                      id="gameName"
+                      name="gameName"
+                      type="text"
+                      value={submitFieldData.gameName}
+                      onChange={(e) => {
+                        setSubmitFieldData({ gameName: e.value });
+                      }}
+                    />
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label for="playerName" sm={3}>
+                    Player Name
+                  </Label>
+                  <Col sm={8}>
+                    <Input
+                      id="playerName"
+                      name="playerName"
+                      type="text"
+                      value={submitFieldData.playerName}
+                      onChange={(e) => {
+                        setSubmitFieldData({ playerName: e.value });
+                      }}
+                    />
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <Label for="nickname" sm={3}>
+                    Nickname
+                  </Label>
+                  <Col sm={8}>
+                    <Input
+                      id="nickname"
+                      name="nickname"
+                      type="text"
+                      value={submitFieldData.nickname}
+                      onChange={(e) => {
+                        setSubmitFieldData({ nickname: e.value });
+                      }}
+                    />
+                  </Col>
+                </FormGroup>
+                <FormGroup row>
+                  <div className="modal-submit-button">
+                    <Button type="submit" color="primary">
+                      Submit
+                    </Button>
+                  </div>
+                </FormGroup>
+              </Form>
+            </ModalBody>
+          </Modal>
+          <Button color="primary" onClick={() => addServer(setPageState)}>
+            Add Server
+          </Button>
+        </div>
+      );
       if (pageState.show_servers) {
         servers = (
           <Container fluid>
+            <div className="server-list-header">Servers</div>
             <React.Fragment>
               {renderServerCards(pageState, setPageState)}
             </React.Fragment>
@@ -670,12 +712,17 @@ function App() {
 
       page = (
         <React.Fragment>
-          {add_servers}
           {servers}
+          {add_servers}
         </React.Fragment>
       );
     } else if (pageState.state === "error") {
-      // page = <div>There is an issue connecting to the server.  Please check your connection info and try again</div>
+      page = (
+        <div>
+          There is an issue connecting to the server. Please check your
+          connection info and try again
+        </div>
+      );
       page = <React.Fragment>{pageState.msg}</React.Fragment>;
     } else if (pageState.state === "pick_players") {
       page = (
