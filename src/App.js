@@ -1,25 +1,14 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+
 import CheckBox from "./Checkbox";
 import Dropdown from "./Dropdown";
-import React, { useReducer, useState, useEffect } from "react";
-import {
-  Card,
-  CardBody,
-  CardTitle,
-  Button,
-  Col,
-  Modal,
-  ModalHeader,
-  ModalBody,
-  Container,
-  CloseButton,
-  Form,
-  FormGroup,
-  Label,
-  Input,
-  CardText,
-} from "reactstrap";
+import Servers from "./Servers";
+import ServerButton from "./ServerButton";
+import Hints, { HintData } from "./Hints";
+
+import React, { useMemo, useReducer, useState, useEffect } from "react";
+import { Button, Col, Container } from "reactstrap";
 
 import {
   Client,
@@ -95,105 +84,7 @@ function pageStateReducer(state, action) {
   }
 }
 
-function renderServerCards(pageState, setPageState) {
-  const connectServer = (event, setPageState) => {
-    const connectionInfo = {
-      hostname: event.server,
-      port: Number(event.port),
-      protocol: "wss",
-      game: event.gameName,
-      name: event.playerName,
-      items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
-      version: {
-        build: 0,
-        major: 4,
-        minor: 4,
-      },
-    };
-
-    try {
-      setPageState({ type: "connecting" });
-      initialClient
-        .connect(connectionInfo)
-        .then(() => {
-          console.log("Connected to the server");
-          const localConfig = JSON.parse(localStorage.getItem("servers"));
-
-          if ("players" in localConfig[event.nickname]) {
-            setPageState({
-              type: "create_clients",
-              servers: pageState.servers,
-              server: event.nickname,
-            });
-          } else {
-            setPageState({
-              type: "pick_players",
-              players: initialClient.players.all,
-              server: event.nickname,
-            });
-          }
-        })
-        .catch((error) => {
-          console.error("Failed to connect:", error);
-          setPageState({
-            type: "error",
-            msg: "There is an issue connecting to the server.  Please check your connection info and try again",
-          });
-        });
-    } catch (err) {
-      console.error("Failed to connect:", err);
-    }
-  };
-
-  let cardList = [];
-
-  const deleteServer = (event) => {
-    delete pageState.servers[event.nickname];
-    localStorage.setItem("servers", JSON.stringify(pageState.servers));
-    setPageState({ type: "server_list", servers: pageState.servers });
-  };
-
-  for (const [key, value] of Object.entries(pageState.servers)) {
-    cardList.push(
-      <Card
-        style={{
-          width: "18rem",
-        }}
-        id={key}
-        key={key}
-      >
-        <CardBody>
-          <CardTitle tag="h5" className="text-uppercase mb-0">
-            <div className="card-header-flex">
-              <div style={{ fontSize: "24px" }}>{key}</div>
-              <CloseButton
-                style={{ height: "7px", width: "7px" }}
-                onClick={() => deleteServer(value)}
-              />
-            </div>
-          </CardTitle>
-          <CardText>
-            Server: {value.server}
-            <br></br>
-            Port: {value.port}
-          </CardText>
-          <div className="card-connect-button">
-            <Button
-              color="primary"
-              onClick={() => connectServer(value, setPageState)}
-            >
-              Connect
-            </Button>
-          </div>
-        </CardBody>
-      </Card>,
-    );
-  }
-
-  return <div className="server-list">{cardList}</div>;
-}
-
-function createClients(pageState, setPageState, hintData, setHintData) {
+function createClients(pageState, setPageState, hints) {
   const server = pageState.servers[pageState.selected_server];
   const players = server.players;
   let clients = pageState.clients;
@@ -238,239 +129,13 @@ function createClients(pageState, setPageState, hintData, setHintData) {
       });
       client.addListener(SERVER_PACKET_TYPE.PRINT_JSON, (packet, message) => {
         if (packet.type === "Hint" || packet.type === "ItemSend") {
-          retrieveHints(pageState, setHintData, packet);
+          hints.retrieveHints(packet);
         }
       });
     } catch (err) {
       console.error("Failed to connect:", err);
     }
   }
-}
-
-function retrieveHintMetadata(
-  client,
-  receiving_player,
-  finding_player,
-  item_id,
-  item_flags,
-  location_id,
-  found,
-) {
-  // Looks up human-readable metadata for hints, since Archipelago only returns player/item/location ids
-  let hint = {};
-  const gameName = client.players.game(receiving_player);
-  const findingPlayerName = client.players.game(finding_player);
-
-  // Static values that might be used in the future
-  hint.Class = "Hint";
-  hint.entrance = "";
-
-  // Perserving original, non-parsed hint data from the server
-  hint.finding_player = finding_player;
-  hint.receiving_player = receiving_player;
-  hint.item = item_id;
-  hint.item_flags = item_flags;
-  hint.location = location_id;
-  hint.found = found;
-
-  // Parsing hint data for more readable fields
-  hint.playerName = client.players.name(receiving_player);
-  hint.findingPlayerName = client.players.name(finding_player);
-  hint.itemName = client.items.name(gameName, item_id);
-  hint.locationName = client.locations.name(findingPlayerName, location_id);
-  hint.isFound = found.toString();
-
-  return hint;
-}
-
-function dynamicFilter(pageState, setPlayerFilter) {
-  // Creates a filter for each game, which is not static
-  let playerList = [{ name: "All", checked: true }];
-
-  for (
-    let game_index = 0;
-    game_index < pageState.clients.length;
-    game_index++
-  ) {
-    playerList.push({
-      name: pageState.clients[game_index].player,
-      checked: false,
-    });
-  }
-
-  setPlayerFilter({ playerList: playerList });
-}
-
-function retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
-  // Loops through all clients and retrieves all hints for each game
-  let hintList = [];
-
-  for (
-    let game_index = 0;
-    game_index < pageState.clients.length;
-    game_index++
-  ) {
-    const client = pageState.clients[game_index].client;
-    const hints = client.hints.mine;
-
-    for (let hint_index = 0; hint_index < hints.length; hint_index++) {
-      let hint = hints[hint_index];
-
-      //  If `retrieveHints` is called because of an `ItemSend` server event, that means the hint has been found
-      //  I have to do this because the Archipelago hint list only updates when you create a new client or a new hint is issued
-      //  It is not updated if a hint's status changes from 'not found' to 'found'...for some reason
-      if (typeof serverUpdateEvent != "undefined") {
-        if (
-          serverUpdateEvent.type === "ItemSend" &&
-          hint.item === serverUpdateEvent.item.item &&
-          hint.location === serverUpdateEvent.item.location &&
-          hint.finding_player === serverUpdateEvent.item.player &&
-          hint.receiving_player === serverUpdateEvent.receiving
-        ) {
-          hint.found = true;
-        }
-      }
-
-      let parsedHint = retrieveHintMetadata(
-        client,
-        hint.receiving_player,
-        hint.finding_player,
-        hint.item,
-        hint.item_flags,
-        hint.location,
-        hint.found,
-      );
-
-      //  Do not add if it already exists
-      let isDuplicate = false;
-      for (let i = 0; i < hintList.length; i++) {
-        if (
-          hintList[i].location === parsedHint.location &&
-          hintList[i].item === parsedHint.item &&
-          hintList[i].receiving_player === parsedHint.receiving_player &&
-          hintList[i].finding_player === parsedHint.finding_player
-        ) {
-          isDuplicate = true;
-          hintList[i] = parsedHint;
-          break;
-        }
-      }
-
-      if (!isDuplicate) {
-        hintList.push(parsedHint);
-      }
-    }
-  }
-
-  setHintData(hintList);
-}
-
-function renderHints(pageState, hintData, filterData, playerFilter) {
-  let renderList = [];
-  let hintFilterSelection = "";
-  let foundFilterSelection = "";
-  let playerFilterSelection = "";
-
-  for (let i = 0; i < filterData.hintFilter.length; i++) {
-    if (filterData.hintFilter[i].checked === true) {
-      hintFilterSelection = filterData.hintFilter[i].name;
-    }
-  }
-
-  for (let i = 0; i < filterData.foundFilter.length; i++) {
-    if (filterData.foundFilter[i].checked === true) {
-      foundFilterSelection = filterData.foundFilter[i].name;
-    }
-  }
-
-  for (let i = 0; i < playerFilter.playerList.length; i++) {
-    if (playerFilter.playerList[i].checked === true) {
-      playerFilterSelection = playerFilter.playerList[i].name;
-    }
-  }
-
-  // Sort list by player name
-  const hints = hintData.sort(function (a, b) {
-    let x = a.playerName.toLowerCase();
-    let y = b.playerName.toLowerCase();
-    if (x > y) {
-      return 1;
-    }
-    if (x < y) {
-      return -1;
-    }
-    return 0;
-  });
-
-  for (let i = 0; i < hints.length; i++) {
-    const hint = hints[i];
-
-    let render = [];
-    render.push(
-      <tr key={hint.finding_player.toString() + hint.location.toString()}>
-        <td>{hint.playerName}</td>
-        <td>{hint.findingPlayerName}</td>
-        <td>{hint.itemName}</td>
-        <td>{hint.locationName}</td>
-        <td>{hint.isFound}</td>
-      </tr>,
-    );
-
-    for (let j = 0; j < pageState.clients.length; j++) {
-      if (
-        ((hintFilterSelection === "My Hints" &&
-          hint.playerName === pageState.clients[j].player) ||
-          (hintFilterSelection === "Assigned Hints" &&
-            hint.findingPlayerName === pageState.clients[j].player) ||
-          hintFilterSelection === "All") &&
-        (foundFilterSelection === "All" ||
-          (foundFilterSelection === "Found" && hint.isFound === "true") ||
-          (foundFilterSelection === "Not Found" && hint.isFound === "false")) &&
-        (playerFilterSelection === "All" ||
-          playerFilterSelection === hint.playerName)
-      ) {
-        renderList.push(render);
-        break;
-      }
-    }
-  }
-
-  return (
-    <Container fluid>
-      <thead>
-        <tr>
-          <th>Receiving Player</th>
-          <th>Finding Player</th>
-          <th>Item</th>
-          <th>Location</th>
-          <th>Found</th>
-          <th style={{ borderStyle: "hidden", width: "85px" }}></th>
-        </tr>
-      </thead>
-      <tbody>{renderList}</tbody>
-    </Container>
-  );
-}
-
-function isValidPort(port) {
-  // Validates that a number is a valid port.  Written by ChatGPT
-  // Ensure the port is a number
-  if (typeof port !== "number") {
-    return false;
-  }
-
-  // Check if the port is an integer
-  if (!Number.isInteger(port)) {
-    return false;
-  }
-
-  // Check if the port is within the valid range (1 to 65535)
-  if (port < 1 || port > 65535) {
-    return false;
-  }
-
-  // If all checks pass, the port is valid
-  return true;
 }
 
 function App() {
@@ -523,38 +188,17 @@ function App() {
   });
 
   const [hintData, setHintData] = useState([]);
+  const hints = useMemo(
+    () => new HintData(pageState, setHintData, setPlayerFilter),
+    [pageState],
+  );
 
   useEffect(() => {
     if (pageState.state === "retrieve_hints") {
-      retrieveHints(pageState, setHintData);
-      dynamicFilter(pageState, setPlayerFilter);
+      hints.retrieveHints();
+      hints.dynamicFilter();
     }
-  }, [pageState]);
-
-  const handleSubmit = (event) => {
-    // TODO: Add data validation
-    // TODO: Check if server exists
-    event.preventDefault();
-    if (!isValidPort(Number(event.target.port.value))) {
-      setPageState({
-        type: "error",
-        msg: "Something is wrong with your connection info.  Please validate and try again.",
-      });
-    } else {
-      let servers = JSON.parse(localStorage.getItem("servers"));
-      servers = servers === null ? {} : servers;
-      servers[event.target.nickname.value] = {
-        server: event.target.server.value,
-        port: event.target.port.value,
-        gameName: event.target.gameName.value,
-        playerName: event.target.playerName.value,
-        nickname: event.target.nickname.value,
-      };
-      localStorage.setItem("servers", JSON.stringify(servers));
-      setPageState({ type: "server_list", servers: servers });
-      setSubmitFieldData(submitFieldDataDefault);
-    }
-  };
+  }, [pageState, hints]);
 
   const selectPlayers = (event) => {
     let servers = JSON.parse(localStorage.getItem("servers"));
@@ -582,129 +226,27 @@ function App() {
     page = <div></div>;
   } else {
     if (pageState.state === "server_list" || pageState.state === "add_server") {
-      const addServer = (setPageState) => {
-        setPageState({ type: "add_server", servers: pageState.servers });
-      };
-
       let add_servers;
       let servers;
 
-      // Toggles the "add server" modal off when the user clicks away
-      const toggle = () => {
-        setPageState({ type: "server_list", servers: pageState.servers });
-      };
-
       add_servers = (
-        <div className="add-server-button">
-          <Modal isOpen={pageState.show_add_server} toggle={toggle}>
-            <ModalHeader cssModule={{ "modal-title": "w-100 text-center" }}>
-              Add a new server
-            </ModalHeader>
-            <ModalBody>
-              <Form onSubmit={handleSubmit}>
-                <FormGroup row>
-                  <Label for="server" sm={3}>
-                    Server
-                  </Label>
-                  <Col sm={8}>
-                    <Input
-                      id="server"
-                      name="server"
-                      value={submitFieldData.server}
-                      onChange={(e) => {
-                        setSubmitFieldData({ server: e.value });
-                      }}
-                      type="text"
-                    />
-                  </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <Label for="port" sm={3}>
-                    Port
-                  </Label>
-                  <Col sm={8}>
-                    <Input
-                      id="port"
-                      name="port"
-                      type="text"
-                      value={submitFieldData.port}
-                      onChange={(e) => {
-                        setSubmitFieldData({ port: e.value });
-                      }}
-                    />
-                  </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <Label for="gameName" sm={3}>
-                    Game Name
-                  </Label>
-                  <Col sm={8}>
-                    <Input
-                      id="gameName"
-                      name="gameName"
-                      type="text"
-                      value={submitFieldData.gameName}
-                      onChange={(e) => {
-                        setSubmitFieldData({ gameName: e.value });
-                      }}
-                    />
-                  </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <Label for="playerName" sm={3}>
-                    Player Name
-                  </Label>
-                  <Col sm={8}>
-                    <Input
-                      id="playerName"
-                      name="playerName"
-                      type="text"
-                      value={submitFieldData.playerName}
-                      onChange={(e) => {
-                        setSubmitFieldData({ playerName: e.value });
-                      }}
-                    />
-                  </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <Label for="nickname" sm={3}>
-                    Nickname
-                  </Label>
-                  <Col sm={8}>
-                    <Input
-                      id="nickname"
-                      name="nickname"
-                      type="text"
-                      value={submitFieldData.nickname}
-                      onChange={(e) => {
-                        setSubmitFieldData({ nickname: e.value });
-                      }}
-                    />
-                  </Col>
-                </FormGroup>
-                <FormGroup row>
-                  <div className="modal-submit-button">
-                    <Button type="submit" color="primary">
-                      Submit
-                    </Button>
-                  </div>
-                </FormGroup>
-              </Form>
-            </ModalBody>
-          </Modal>
-          <Button color="primary" onClick={() => addServer(setPageState)}>
-            Add Server
-          </Button>
-        </div>
+        <ServerButton
+          id="serverButtom"
+          state={pageState}
+          stateSetter={setPageState}
+          submitFieldData={submitFieldData}
+          submitFieldSetter={setSubmitFieldData}
+          submitFieldDataDefault={submitFieldDataDefault}
+        />
       );
       if (pageState.show_servers) {
         servers = (
-          <Container fluid>
-            <div className="server-list-header">Servers</div>
-            <React.Fragment>
-              {renderServerCards(pageState, setPageState)}
-            </React.Fragment>
-          </Container>
+          <Servers
+            id="serverList"
+            initialClient={initialClient}
+            state={pageState}
+            stateSetter={setPageState}
+          />
         );
       } else {
         servers = <div></div>;
@@ -734,14 +276,20 @@ function App() {
         </Container>
       );
     } else if (pageState.state === "create_clients") {
-      createClients(pageState, setPageState, hintData, setHintData);
+      createClients(pageState, setPageState, hints);
       page = <Container fluid></Container>;
     } else if (pageState.state === "retrieve_hints") {
       initialClient.disconnect();
       let hints = (
         <Container fluid>
           <React.Fragment>
-            {renderHints(pageState, hintData, filterData, playerFilter)}
+            <Hints
+              id="hints"
+              state={pageState}
+              hintData={hintData}
+              filterData={filterData}
+              playerFilter={playerFilter}
+            />
           </React.Fragment>
         </Container>
       );
