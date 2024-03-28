@@ -36,7 +36,7 @@ code {
 .server-list-header {
   font-size: 24px;
   text-align: center;
-  padding-bottom: 15px;
+  margin: 15px;
 }
 
 .add-server-button {
@@ -65,4 +65,8 @@ code {
 .dropdown-row {
   display: flex;
   justify-content: flex-end;
+}
+
+.MuiAppBar-colorPrimary {
+  background-color: black;
 }

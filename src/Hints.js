@@ -4,7 +4,7 @@ import { Container, Table } from "reactstrap";
 function Hints(props) {
   return (
     <Container fluid>
-      <Table>
+      <Table hover responsive>
         <thead>
           <tr>
             <th>Receiving Player</th>
@@ -69,6 +69,7 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
     const hint = hints[i];
 
     let render = [];
+
     render.push(
       <tr key={hint.finding_player.toString() + hint.location.toString()}>
         <td>{hint.playerName}</td>

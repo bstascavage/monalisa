@@ -6,9 +6,16 @@ import Dropdown from "./Dropdown";
 import Servers from "./Servers";
 import ServerButton from "./ServerButton";
 import Hints, { HintData } from "./Hints";
+import { ReactComponent as logo } from "./assets/navbarlogo.svg";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 import { Button, Container } from "reactstrap";
+
+import AppBar from "@mui/material/AppBar";
+import Box from "@mui/material/Box";
+import Toolbar from "@mui/material/Toolbar";
+import SvgIcon from "@mui/material/SvgIcon";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 import {
   Client,
@@ -171,9 +178,9 @@ function App() {
       { name: "Assigned Hints", checked: false },
     ],
     foundFilter: [
-      { name: "All", checked: true },
+      { name: "All", checked: false },
       { name: "Found", checked: false },
-      { name: "Not Found", checked: false },
+      { name: "Not Found", checked: true },
     ],
   });
 
@@ -221,6 +228,32 @@ function App() {
   };
 
   let page;
+  let banner;
+
+  const theme = createTheme({
+    palette: {
+      banner: {
+        main: "#f8f9fa",
+        light: "#E9DB5D",
+        dark: "#A29415",
+        contrastText: "#242105",
+      },
+    },
+  });
+
+  banner = (
+    <React.Fragment>
+      <Box sx={{ flexGrow: 1 }}>
+        <ThemeProvider theme={theme}>
+          <AppBar position="static" color="banner">
+            <Toolbar>
+              <SvgIcon component={logo} inheritViewBox></SvgIcon>
+            </Toolbar>
+          </AppBar>
+        </ThemeProvider>
+      </Box>
+    </React.Fragment>
+  );
 
   if (pageState.hide_page) {
     page = <div></div>;
@@ -254,6 +287,7 @@ function App() {
 
       page = (
         <React.Fragment>
+          {banner}
           {servers}
           {add_servers}
         </React.Fragment>
@@ -293,8 +327,9 @@ function App() {
       );
 
       page = (
-        <Container fluid>
-          <React.Fragment>
+        <React.Fragment>
+          {banner}
+          <Container fluid>
             <div className="dropdown-row">
               <Dropdown
                 title="Hints Filter"
@@ -316,8 +351,8 @@ function App() {
               />
             </div>
             {hints}
-          </React.Fragment>
-        </Container>
+          </Container>
+        </React.Fragment>
       );
     } else {
       page = <div></div>;
