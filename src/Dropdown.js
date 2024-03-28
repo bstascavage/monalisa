@@ -1,6 +1,4 @@
 import React from "react";
-import { Row } from "reactstrap";
-// import "./scss/main.scss";
 
 function Dropdown(props) {
   const handleChange = (value) => {
@@ -31,10 +29,10 @@ function Dropdown(props) {
 
   return (
     <React.Fragment>
-      <Row className="pt-4 pb-4 stats-row">{props.title}</Row>
-      <Row className="pt-4 pb-4 stats-row">
+      <div className="dropdown-filter">
+        {props.title}
         <select
-          className="input"
+          className="dropdown"
           id={props.id}
           name={props.name}
           onChange={handleChange}
@@ -42,7 +40,7 @@ function Dropdown(props) {
         >
           {dropdown}
         </select>
-      </Row>
+      </div>
     </React.Fragment>
   );
 }

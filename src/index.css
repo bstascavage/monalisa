@@ -49,3 +49,20 @@ code {
   display: flex;
   justify-content: space-between;
 }
+
+.dropdown-filter {
+  display: flex;
+  flex-direction: column;
+  margin: 1rem;
+  padding-top: 1.5rem;
+  justify-content: center;
+}
+
+.dropdown {
+  width: 10rem;
+}
+
+.dropdown-row {
+  display: flex;
+  justify-content: flex-end;
+}

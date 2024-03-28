@@ -1,27 +1,29 @@
 import React from "react";
-import { Container } from "reactstrap";
+import { Container, Table } from "reactstrap";
 
 function Hints(props) {
   return (
     <Container fluid>
-      <thead>
-        <tr>
-          <th>Receiving Player</th>
-          <th>Finding Player</th>
-          <th>Item</th>
-          <th>Location</th>
-          <th>Found</th>
-          <th style={{ borderStyle: "hidden", width: "85px" }}></th>
-        </tr>
-      </thead>
-      <tbody>
-        {renderHints(
-          props.state,
-          props.hintData,
-          props.filterData,
-          props.playerFilter,
-        )}
-      </tbody>
+      <Table>
+        <thead>
+          <tr>
+            <th>Receiving Player</th>
+            <th>Finding Player</th>
+            <th>Item</th>
+            <th>Location</th>
+            <th>Found</th>
+            <th style={{ borderStyle: "hidden", width: "85px" }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {renderHints(
+            props.state,
+            props.hintData,
+            props.filterData,
+            props.playerFilter,
+          )}
+        </tbody>
+      </Table>
     </Container>
   );
 }

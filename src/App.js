@@ -8,7 +8,7 @@ import ServerButton from "./ServerButton";
 import Hints, { HintData } from "./Hints";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
-import { Button, Col, Container } from "reactstrap";
+import { Button, Container } from "reactstrap";
 
 import {
   Client,
@@ -281,46 +281,43 @@ function App() {
     } else if (pageState.state === "retrieve_hints") {
       initialClient.disconnect();
       let hints = (
-        <Container fluid>
-          <React.Fragment>
-            <Hints
-              id="hints"
-              state={pageState}
-              hintData={hintData}
-              filterData={filterData}
-              playerFilter={playerFilter}
-            />
-          </React.Fragment>
-        </Container>
+        <React.Fragment>
+          <Hints
+            id="hints"
+            state={pageState}
+            hintData={hintData}
+            filterData={filterData}
+            playerFilter={playerFilter}
+          />
+        </React.Fragment>
       );
 
       page = (
-        <React.Fragment>
-          <Col lg="6" xl="3" className="col-padding">
-            <Dropdown
-              title="Hints Filter"
-              id="hintFilter"
-              value={filterData}
-              valueSetter={setFilterData}
-            />
-            <Dropdown
-              title="Found Filter"
-              id="foundFilter"
-              value={filterData}
-              valueSetter={setFilterData}
-            />
-            <Dropdown
-              title="Game Filter"
-              id="playerList"
-              value={playerFilter}
-              valueSetter={setPlayerFilter}
-            />
-          </Col>
-
-          <Col lg="6" xl="3" className="col-padding">
+        <Container fluid>
+          <React.Fragment>
+            <div className="dropdown-row">
+              <Dropdown
+                title="Hints Filter"
+                id="hintFilter"
+                value={filterData}
+                valueSetter={setFilterData}
+              />
+              <Dropdown
+                title="Game Filter"
+                id="playerList"
+                value={playerFilter}
+                valueSetter={setPlayerFilter}
+              />
+              <Dropdown
+                title="Found Filter"
+                id="foundFilter"
+                value={filterData}
+                valueSetter={setFilterData}
+              />
+            </div>
             {hints}
-          </Col>
-        </React.Fragment>
+          </React.Fragment>
+        </Container>
       );
     } else {
       page = <div></div>;
