@@ -1,6 +1,7 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+import Banner from "./Banner";
 import CheckBox from "./Checkbox";
 import Dropdown from "./Dropdown";
 import Servers from "./Servers";
@@ -10,12 +11,6 @@ import { ReactComponent as logo } from "./assets/logo.svg";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 import { Button, Container } from "reactstrap";
-
-import AppBar from "@mui/material/AppBar";
-import Box from "@mui/material/Box";
-import Toolbar from "@mui/material/Toolbar";
-import SvgIcon from "@mui/material/SvgIcon";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
 
 import {
   Client,
@@ -230,34 +225,7 @@ function App() {
   let page;
   let banner;
 
-  const theme = createTheme({
-    palette: {
-      banner: {
-        // main: "#f8f9fa",
-        light: "#E9DB5D",
-        dark: "#A29415",
-        contrastText: "#242105",
-      },
-    },
-  });
-
-  banner = (
-    <React.Fragment>
-      <Box sx={{ flexGrow: 1 }}>
-        <ThemeProvider theme={theme}>
-          <AppBar position="static" color="banner">
-            <Toolbar>
-              <SvgIcon
-                class="mona-lisa-logo"
-                component={logo}
-                inheritViewBox
-              ></SvgIcon>
-            </Toolbar>
-          </AppBar>
-        </ThemeProvider>
-      </Box>
-    </React.Fragment>
-  );
+  banner = <Banner logo={logo} />;
 
   if (pageState.hide_page) {
     page = <div></div>;
