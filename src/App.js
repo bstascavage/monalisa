@@ -100,7 +100,7 @@ function createClients(pageState, setPageState, hints) {
       port: Number(server.port),
       protocol: "wss",
       game: player.game,
-      name: player.name,
+      name: player.player,
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,
       version: {
         build: 0,
@@ -119,7 +119,7 @@ function createClients(pageState, setPageState, hints) {
 
     try {
       client.connect(connectionInfo).then(() => {
-        console.log(`Connected to the server for player: ${player.name}`);
+        console.log(`Connected to the server for player: ${player.player}`);
         clients.push({ client: client, player: player.name });
 
         if (
@@ -203,9 +203,11 @@ function App() {
   }, [pageState, hints]);
 
   const selectPlayers = (event) => {
+    console.log("foobar");
     let servers = JSON.parse(localStorage.getItem("servers"));
     let selectedPlayers = [];
 
+    console.log(pageState);
     for (let i = 0; i < pageState.players.length; i++) {
       let player = pageState.players[i];
       if (player.checked === true) {
@@ -213,7 +215,8 @@ function App() {
       }
     }
 
-    servers[pageState.selected_server].players = selectedPlayers;
+    // servers[pageState.selected_server].players = selectedPlayers;
+    servers[pageState.selected_server].players = pageState.players;
     localStorage.setItem("servers", JSON.stringify(servers));
     setPageState({
       type: "create_clients",

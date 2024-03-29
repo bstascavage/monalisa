@@ -29,7 +29,7 @@ function Dropdown(props) {
 
   return (
     <React.Fragment>
-      <div className="dropdown-filter">
+      <div key={props.id} className="dropdown-filter">
         {props.title}
         <select
           className="dropdown"
