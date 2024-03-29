@@ -1,30 +1,74 @@
 import React from "react";
-import { Container, Table } from "reactstrap";
+
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 
 function Hints(props) {
+  let rows = renderHints(
+    props.state,
+    props.hintData,
+    props.filterData,
+    props.playerFilter,
+  );
+
   return (
-    <Container fluid>
-      <Table style={{ "--bs-table-bg": "#fbfbfb" }} hover responsive>
-        <thead>
-          <tr>
-            <th>Receiving Player</th>
-            <th>Finding Player</th>
-            <th>Item</th>
-            <th>Location</th>
-            <th>Found</th>
-            <th style={{ borderStyle: "hidden", width: "85px" }}></th>
-          </tr>
-        </thead>
-        <tbody>
-          {renderHints(
-            props.state,
-            props.hintData,
-            props.filterData,
-            props.playerFilter,
-          )}
-        </tbody>
+    <TableContainer component={Paper}>
+      <Table stickyHeader sx={{ minWidth: 650 }} aria-label="sticky table">
+        <TableHead>
+          <TableRow>
+            <TableCell>Receiving Player</TableCell>
+            <TableCell align="left">Finding Player</TableCell>
+            <TableCell align="left">Item</TableCell>
+            <TableCell align="left">Location</TableCell>
+            <TableCell align="left">Found</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {rows.map((row) => (
+            <TableRow
+              hover
+              key={row.findingPlayerName + row.locationName}
+              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+            >
+              <TableCell component="th" scope="row">
+                {row.playerName}
+              </TableCell>
+              <TableCell align="left">{row.findingPlayerName}</TableCell>
+              <TableCell align="left">{row.itemName}</TableCell>
+              <TableCell align="left">{row.locationName}</TableCell>
+              <TableCell align="left">{row.isFound}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
       </Table>
-    </Container>
+    </TableContainer>
+    // <Container fluid>
+    //   <Table style={{ "--bs-table-bg": "#fbfbfb" }} hover responsive>
+    //     <thead>
+    //       <tr>
+    //         <th>Receiving Player</th>
+    //         <th>Finding Player</th>
+    //         <th>Item</th>
+    //         <th>Location</th>
+    //         <th>Found</th>
+    //         <th style={{ borderStyle: "hidden", width: "85px" }}></th>
+    //       </tr>
+    //     </thead>
+    //     <tbody>
+    //       {renderHints(
+    //         props.state,
+    //         props.hintData,
+    //         props.filterData,
+    //         props.playerFilter,
+    //       )}
+    //     </tbody>
+    //   </Table>
+    // </Container>
   );
 }
 
@@ -70,15 +114,13 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
 
     let render = [];
 
-    render.push(
-      <tr key={hint.finding_player.toString() + hint.location.toString()}>
-        <td>{hint.playerName}</td>
-        <td>{hint.findingPlayerName}</td>
-        <td>{hint.itemName}</td>
-        <td>{hint.locationName}</td>
-        <td>{hint.isFound}</td>
-      </tr>,
-    );
+    render = {
+      playerName: hint.playerName,
+      findingPlayerName: hint.findingPlayerName,
+      itemName: hint.itemName,
+      locationName: hint.locationName,
+      isFound: hint.isFound,
+    };
 
     for (let j = 0; j < pageState.clients.length; j++) {
       if (
@@ -127,7 +169,6 @@ export class HintData {
     this.playerFilterSetter({ playerList: playerList });
   }
 
-  // retrieveHints(pageState, setHintData, serverUpdateEvent = undefined) {
   retrieveHints(serverUpdateEvent = undefined) {
     // Loops through all clients and retrieves all hints for each game
     let hintList = [];
