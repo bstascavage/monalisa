@@ -120,7 +120,7 @@ function createClients(pageState, setPageState, hints) {
     try {
       client.connect(connectionInfo).then(() => {
         console.log(`Connected to the server for player: ${player.player}`);
-        clients.push({ client: client, player: player.name });
+        clients.push({ client: client, player: player.player });
 
         if (
           pageState.servers[pageState.selected_server].players.length ===
@@ -203,11 +203,9 @@ function App() {
   }, [pageState, hints]);
 
   const selectPlayers = (event) => {
-    console.log("foobar");
     let servers = JSON.parse(localStorage.getItem("servers"));
     let selectedPlayers = [];
 
-    console.log(pageState);
     for (let i = 0; i < pageState.players.length; i++) {
       let player = pageState.players[i];
       if (player.checked === true) {
