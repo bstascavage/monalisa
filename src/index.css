@@ -67,6 +67,8 @@ code {
   justify-content: flex-end;
 }
 
-.MuiAppBar-colorPrimary {
-  background-color: black;
+.mona-lisa-logo {
+  max-height: 50px;
+  height: auto;
+  width: auto;
 }

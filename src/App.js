@@ -6,7 +6,7 @@ import Dropdown from "./Dropdown";
 import Servers from "./Servers";
 import ServerButton from "./ServerButton";
 import Hints, { HintData } from "./Hints";
-import { ReactComponent as logo } from "./assets/navbarlogo.svg";
+import { ReactComponent as logo } from "./assets/logo.svg";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 import { Button, Container } from "reactstrap";
@@ -233,7 +233,7 @@ function App() {
   const theme = createTheme({
     palette: {
       banner: {
-        main: "#f8f9fa",
+        // main: "#f8f9fa",
         light: "#E9DB5D",
         dark: "#A29415",
         contrastText: "#242105",
@@ -247,7 +247,11 @@ function App() {
         <ThemeProvider theme={theme}>
           <AppBar position="static" color="banner">
             <Toolbar>
-              <SvgIcon component={logo} inheritViewBox></SvgIcon>
+              <SvgIcon
+                class="mona-lisa-logo"
+                component={logo}
+                inheritViewBox
+              ></SvgIcon>
             </Toolbar>
           </AppBar>
         </ThemeProvider>

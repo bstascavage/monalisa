@@ -4,7 +4,7 @@ import { Container, Table } from "reactstrap";
 function Hints(props) {
   return (
     <Container fluid>
-      <Table hover responsive>
+      <Table style={{ "--bs-table-bg": "#fbfbfb" }} hover responsive>
         <thead>
           <tr>
             <th>Receiving Player</th>
