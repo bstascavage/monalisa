@@ -6,18 +6,18 @@ function CheckBox(props) {
     {
       field: "player",
       headerName: "Player",
-      width: 400,
+      flex: 1,
     },
     {
       field: "game",
       headerName: "Game",
-      width: 400,
+      flex: 1,
     },
   ];
 
   const rows = renderCheckbox(props);
   return (
-    <div style={{ height: "auto", width: "100%" }}>
+    <div className="player-checkbox-container">
       <DataGrid
         rows={rows}
         columns={columns}

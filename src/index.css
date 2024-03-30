@@ -72,3 +72,26 @@ code {
   height: auto;
   width: auto;
 }
+
+.player-checkbox-container {
+  height: auto;
+  max-width: 100%;
+  margin: 15px;
+  width: 800px;
+}
+
+.player-select-header {
+  padding: 15px;
+  font-size: xx-large;
+}
+
+.player-select-button {
+  margin-bottom: 15px;
+}
+
+.player-select {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+}
