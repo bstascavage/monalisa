@@ -27,9 +27,13 @@ function Dropdown(props) {
     );
   }
 
+  let className = props.paddingBottom
+    ? "dropdown-filter dropdown-filter-last"
+    : "dropdown-filter";
+
   return (
     <React.Fragment>
-      <div key={props.id} className="dropdown-filter">
+      <div key={props.id} className={className}>
         {props.title}
         <select
           className="dropdown"

@@ -67,8 +67,48 @@ code {
   justify-content: flex-end;
 }
 
+@media (max-width: 800px) {
+  .dropdown-row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .dropdown-filter {
+    align-self: center;
+    margin: 0.1em;
+    padding-top: 0.5rem;
+  }
+
+  .dropdown-filter-last {
+    padding-bottom: 1rem;
+  }
+}
+
 .mona-lisa-logo {
   max-height: 50px;
   height: auto;
   width: auto;
+}
+
+.player-checkbox-container {
+  height: auto;
+  max-width: 100%;
+  margin: 15px;
+  width: 800px;
+}
+
+.player-select-header {
+  padding: 15px;
+  font-size: xx-large;
+}
+
+.player-select-button {
+  margin-bottom: 15px;
+}
+
+.player-select {
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
 }

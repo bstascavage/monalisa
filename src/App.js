@@ -275,12 +275,22 @@ function App() {
       page = <React.Fragment>{pageState.msg}</React.Fragment>;
     } else if (pageState.state === "pick_players") {
       page = (
-        <Container fluid>
-          <CheckBox id="players" value={pageState} valueSetter={setPageState} />
-          <Button color="primary" onClick={() => selectPlayers()}>
-            Submit
-          </Button>
-        </Container>
+        <React.Fragment>
+          {banner}
+          <Container className="player-select">
+            <div className="player-select-header">Select your games</div>
+            <CheckBox
+              id="players"
+              value={pageState}
+              valueSetter={setPageState}
+            />
+            <div className="player-select-button">
+              <Button color="primary" onClick={() => selectPlayers()}>
+                Submit
+              </Button>
+            </div>
+          </Container>
+        </React.Fragment>
       );
     } else if (pageState.state === "create_clients") {
       createClients(pageState, setPageState, hints);
@@ -321,6 +331,7 @@ function App() {
                 id="foundFilter"
                 value={filterData}
                 valueSetter={setFilterData}
+                paddingBottom={true}
               />
             </div>
             {hints}
