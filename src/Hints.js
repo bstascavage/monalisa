@@ -13,7 +13,8 @@ function Hints(props) {
     props.state,
     props.hintData,
     props.filterData,
-    props.playerFilter,
+    props.receivingPlayerFilter,
+    props.findingPlayerFilter,
   );
 
   return (
@@ -25,7 +26,7 @@ function Hints(props) {
             <TableCell align="left">Finding Player</TableCell>
             <TableCell align="left">Item</TableCell>
             <TableCell align="left">Location</TableCell>
-            <TableCell align="left">Found</TableCell>
+            <TableCell align="left">Status</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -50,11 +51,18 @@ function Hints(props) {
   );
 }
 
-function renderHints(pageState, hintData, filterData, playerFilter) {
+function renderHints(
+  pageState,
+  hintData,
+  filterData,
+  receivingPlayerFilter,
+  findingPlayerFilter,
+) {
   let renderList = [];
   let hintFilterSelection = "";
   let foundFilterSelection = "";
-  let playerFilterSelection = "";
+  let receivingPlayerFilterSelection = "";
+  let findingPlayerFilterSelection = "";
 
   for (let i = 0; i < filterData.hintFilter.length; i++) {
     if (filterData.hintFilter[i].checked === true) {
@@ -68,9 +76,15 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
     }
   }
 
-  for (let i = 0; i < playerFilter.playerList.length; i++) {
-    if (playerFilter.playerList[i].checked === true) {
-      playerFilterSelection = playerFilter.playerList[i].name;
+  for (let i = 0; i < receivingPlayerFilter.playerList.length; i++) {
+    if (receivingPlayerFilter.playerList[i].checked === true) {
+      receivingPlayerFilterSelection = receivingPlayerFilter.playerList[i].name;
+    }
+  }
+
+  for (let i = 0; i < findingPlayerFilter.playerList.length; i++) {
+    if (findingPlayerFilter.playerList[i].checked === true) {
+      findingPlayerFilterSelection = findingPlayerFilter.playerList[i].name;
     }
   }
 
@@ -108,10 +122,13 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
             hint.findingPlayerName === pageState.clients[j].player) ||
           hintFilterSelection === "All") &&
         (foundFilterSelection === "All" ||
-          (foundFilterSelection === "Found" && hint.isFound === "true") ||
-          (foundFilterSelection === "Not Found" && hint.isFound === "false")) &&
-        (playerFilterSelection === "All" ||
-          playerFilterSelection === hint.playerName)
+          (foundFilterSelection === "Found" && hint.foundBool === "true") ||
+          (foundFilterSelection === "Not Found" &&
+            hint.foundBool === "false")) &&
+        (receivingPlayerFilterSelection === "All" ||
+          receivingPlayerFilterSelection === hint.playerName) &&
+        (findingPlayerFilterSelection === "All" ||
+          findingPlayerFilterSelection === hint.findingPlayerName)
       ) {
         renderList.push(render);
         break;
@@ -123,28 +140,55 @@ function renderHints(pageState, hintData, filterData, playerFilter) {
 }
 
 export class HintData {
-  constructor(state, hintSetter, playerFilterSetter) {
+  constructor(
+    state,
+    hintSetter,
+    receivingPlayerFilterSetter,
+    findingPlayerFilterSetter,
+  ) {
     this.state = state;
     this.hintSetter = hintSetter;
-    this.playerFilterSetter = playerFilterSetter;
+    this.receivingPlayerFilterSetter = receivingPlayerFilterSetter;
+    this.findingPlayerFilterSetter = findingPlayerFilterSetter;
   }
 
   dynamicFilter() {
     // Creates a filter for each game, which is not static
-    let playerList = [{ name: "All", checked: true }];
+    let receivingPlayerList = [{ name: "All", checked: true }];
+    let findingPlayerList = [{ name: "All", checked: true }];
+    let findingPlayers = new Set([]);
 
     for (
       let game_index = 0;
       game_index < this.state.clients.length;
       game_index++
     ) {
-      playerList.push({
+      receivingPlayerList.push({
         name: this.state.clients[game_index].player,
+        checked: false,
+      });
+
+      let hints = this.state.clients[game_index].client.hints.mine;
+      for (let hint_index = 0; hint_index < hints.length; hint_index++) {
+        // Gets the player id and looks up the player name
+        // Adds it to a set in order to deal with duplicates
+        findingPlayers.add(
+          this.state.clients[game_index].client.players.name(
+            hints[hint_index].finding_player,
+          ),
+        );
+      }
+    }
+
+    for (const value of findingPlayers) {
+      findingPlayerList.push({
+        name: value,
         checked: false,
       });
     }
 
-    this.playerFilterSetter({ playerList: playerList });
+    this.receivingPlayerFilterSetter({ playerList: receivingPlayerList });
+    this.findingPlayerFilterSetter({ playerList: findingPlayerList });
   }
 
   retrieveHints(serverUpdateEvent = undefined) {
@@ -242,7 +286,8 @@ export class HintData {
     hint.findingPlayerName = client.players.name(finding_player);
     hint.itemName = client.items.name(gameName, item_id);
     hint.locationName = client.locations.name(findingPlayerName, location_id);
-    hint.isFound = found.toString();
+    hint.foundBool = found.toString();
+    hint.isFound = found.toString() ? "Found" : "Not Found";
 
     return hint;
   }

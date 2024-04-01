@@ -180,7 +180,15 @@ function App() {
   });
 
   // TODO: Can this be combined with `filterData`
-  const [playerFilter, setPlayerFilter] = useState({
+  const [receivingPlayerFilter, setReceivingPlayerFilter] = useState({
+    playerList: [
+      {
+        name: "All",
+        checked: true,
+      },
+    ],
+  });
+  const [findingPlayerFilter, setFindingPlayerFilter] = useState({
     playerList: [
       {
         name: "All",
@@ -191,7 +199,13 @@ function App() {
 
   const [hintData, setHintData] = useState([]);
   const hints = useMemo(
-    () => new HintData(pageState, setHintData, setPlayerFilter),
+    () =>
+      new HintData(
+        pageState,
+        setHintData,
+        setReceivingPlayerFilter,
+        setFindingPlayerFilter,
+      ),
     [pageState],
   );
 
@@ -304,7 +318,8 @@ function App() {
             state={pageState}
             hintData={hintData}
             filterData={filterData}
-            playerFilter={playerFilter}
+            receivingPlayerFilter={receivingPlayerFilter}
+            findingPlayerFilter={findingPlayerFilter}
           />
         </React.Fragment>
       );
@@ -315,19 +330,25 @@ function App() {
           <Container fluid>
             <div className="dropdown-row">
               <Dropdown
-                title="Hints Filter"
+                title="Hints"
                 id="hintFilter"
                 value={filterData}
                 valueSetter={setFilterData}
               />
               <Dropdown
-                title="Game Filter"
+                title="Receiving Player"
                 id="playerList"
-                value={playerFilter}
-                valueSetter={setPlayerFilter}
+                value={receivingPlayerFilter}
+                valueSetter={setReceivingPlayerFilter}
               />
               <Dropdown
-                title="Found Filter"
+                title="Finding Player"
+                id="playerList"
+                value={findingPlayerFilter}
+                valueSetter={setFindingPlayerFilter}
+              />
+              <Dropdown
+                title="Status"
                 id="foundFilter"
                 value={filterData}
                 valueSetter={setFilterData}
