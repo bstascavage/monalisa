@@ -331,6 +331,7 @@ function App() {
                 id="foundFilter"
                 value={filterData}
                 valueSetter={setFilterData}
+                paddingBottom={true}
               />
             </div>
             {hints}

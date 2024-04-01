@@ -67,6 +67,23 @@ code {
   justify-content: flex-end;
 }
 
+@media (max-width: 800px) {
+  .dropdown-row {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .dropdown-filter {
+    align-self: center;
+    margin: 0.1em;
+    padding-top: 0.5rem;
+  }
+
+  .dropdown-filter-last {
+    padding-bottom: 1rem;
+  }
+}
+
 .mona-lisa-logo {
   max-height: 50px;
   height: auto;
