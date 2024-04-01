@@ -26,7 +26,7 @@ function Hints(props) {
             <TableCell align="left">Finding Player</TableCell>
             <TableCell align="left">Item</TableCell>
             <TableCell align="left">Location</TableCell>
-            <TableCell align="left">Found</TableCell>
+            <TableCell align="left">Status</TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
@@ -122,8 +122,9 @@ function renderHints(
             hint.findingPlayerName === pageState.clients[j].player) ||
           hintFilterSelection === "All") &&
         (foundFilterSelection === "All" ||
-          (foundFilterSelection === "Found" && hint.isFound === "true") ||
-          (foundFilterSelection === "Not Found" && hint.isFound === "false")) &&
+          (foundFilterSelection === "Found" && hint.foundBool === "true") ||
+          (foundFilterSelection === "Not Found" &&
+            hint.foundBool === "false")) &&
         (receivingPlayerFilterSelection === "All" ||
           receivingPlayerFilterSelection === hint.playerName) &&
         (findingPlayerFilterSelection === "All" ||
@@ -285,7 +286,8 @@ export class HintData {
     hint.findingPlayerName = client.players.name(finding_player);
     hint.itemName = client.items.name(gameName, item_id);
     hint.locationName = client.locations.name(findingPlayerName, location_id);
-    hint.isFound = found.toString();
+    hint.foundBool = found.toString();
+    hint.isFound = found.toString() ? "Found" : "Not Found";
 
     return hint;
   }
