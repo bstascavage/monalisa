@@ -287,7 +287,7 @@ export class HintData {
     hint.itemName = client.items.name(gameName, item_id);
     hint.locationName = client.locations.name(findingPlayerName, location_id);
     hint.foundBool = found.toString();
-    hint.isFound = found.toString() ? "Found" : "Not Found";
+    hint.isFound = found.toString() === true ? "Found" : "Not Found";
 
     return hint;
   }
