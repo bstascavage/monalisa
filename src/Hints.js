@@ -17,6 +17,32 @@ function Hints(props) {
     props.findingPlayerFilter,
   );
 
+  // Only shows the `entrance` column if "Show Entrances" dropdown is selected
+  let showEntrance = false;
+  for (let i = 0; i < props.filterData.entranceFilter.length; i++) {
+    if (
+      props.filterData.entranceFilter[i].name === "Yes" &&
+      props.filterData.entranceFilter[i].checked === true
+    ) {
+      showEntrance = props.filterData.entranceFilter[i].checked;
+    }
+  }
+
+  const renderEntranceHeader = () => {
+    return showEntrance === true ? (
+      <TableCell align="left">Entrance</TableCell>
+    ) : (
+      <div></div>
+    );
+  };
+  const renderEntranceBody = (row) => {
+    return showEntrance === true ? (
+      <TableCell align="left">{row.entrance}</TableCell>
+    ) : (
+      <div></div>
+    );
+  };
+
   return (
     <TableContainer component={Paper}>
       <Table stickyHeader sx={{ minWidth: 650 }} aria-label="sticky table">
@@ -26,6 +52,7 @@ function Hints(props) {
             <TableCell align="left">Finding Player</TableCell>
             <TableCell align="left">Item</TableCell>
             <TableCell align="left">Location</TableCell>
+            {renderEntranceHeader()}
             <TableCell align="left">Status</TableCell>
           </TableRow>
         </TableHead>
@@ -42,6 +69,7 @@ function Hints(props) {
               <TableCell align="left">{row.findingPlayerName}</TableCell>
               <TableCell align="left">{row.itemName}</TableCell>
               <TableCell align="left">{row.locationName}</TableCell>
+              {renderEntranceBody(row)}
               <TableCell align="left">{row.isFound}</TableCell>
             </TableRow>
           ))}
@@ -112,6 +140,7 @@ function renderHints(
       itemName: hint.itemName,
       locationName: hint.locationName,
       isFound: hint.isFound,
+      entrance: hint.entrance,
     };
 
     for (let j = 0; j < pageState.clients.length; j++) {
@@ -229,6 +258,7 @@ export class HintData {
           hint.item_flags,
           hint.location,
           hint.found,
+          hint.entrance,
         );
 
         //  Do not add if it already exists
@@ -263,6 +293,7 @@ export class HintData {
     item_flags,
     location_id,
     found,
+    entrance,
   ) {
     // Looks up human-readable metadata for hints, since Archipelago only returns player/item/location ids
     let hint = {};
@@ -280,6 +311,7 @@ export class HintData {
     hint.item_flags = item_flags;
     hint.location = location_id;
     hint.found = found;
+    hint.entrance = entrance;
 
     // Parsing hint data for more readable fields
     hint.playerName = client.players.name(receiving_player);

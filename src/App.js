@@ -177,6 +177,10 @@ function App() {
       { name: "Found", checked: false },
       { name: "Not Found", checked: true },
     ],
+    entranceFilter: [
+      { name: "Yes", checked: false },
+      { name: "No", checked: true },
+    ],
   });
 
   // TODO: Can this be combined with `filterData`
@@ -350,6 +354,13 @@ function App() {
               <Dropdown
                 title="Status"
                 id="foundFilter"
+                value={filterData}
+                valueSetter={setFilterData}
+                paddingBottom={true}
+              />
+              <Dropdown
+                title="Show Entrances"
+                id="entranceFilter"
                 value={filterData}
                 valueSetter={setFilterData}
                 paddingBottom={true}
