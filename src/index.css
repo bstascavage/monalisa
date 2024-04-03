@@ -27,10 +27,28 @@ code {
   justify-content: center;
 }
 
+.logo-title {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin: 15px;
+}
+
+.logo {
+  width: 50%;
+}
+
+.title-subtile {
+  font-size: x-large;
+}
+
 .server-list {
   display: flex;
   justify-content: center;
   gap: 15px;
+  padding-top: 15px;
+  padding-bottom: 15px;
 }
 
 .server-list-header {

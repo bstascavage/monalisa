@@ -14,7 +14,6 @@ import { ITEMS_HANDLING_FLAGS } from "archipelago.js";
 function Servers(props) {
   return (
     <Container fluid>
-      <div className="server-list-header">Servers</div>
       <React.Fragment>{renderServerCards(props)}</React.Fragment>
     </Container>
   );

@@ -7,7 +7,9 @@ import Dropdown from "./Dropdown";
 import Servers from "./Servers";
 import ServerButton from "./ServerButton";
 import Hints, { HintData } from "./Hints";
+
 import { ReactComponent as logo } from "./assets/logo.svg";
+import mainLogo from "./assets/mona-lisa-logo-big.png";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 import { Button, Container } from "reactstrap";
@@ -280,6 +282,12 @@ function App() {
       page = (
         <React.Fragment>
           {banner}
+          <div className="logo-title">
+            <img src={mainLogo} className="logo" alt="Mona Lisa Hint System" />
+            <div className="title-subtile">
+              An Archipelago Hint Tool - All your hints in one view
+            </div>
+          </div>
           {servers}
           {add_servers}
         </React.Fragment>
