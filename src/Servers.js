@@ -35,7 +35,7 @@ function renderServerCards(props) {
       version: {
         build: 0,
         major: 4,
-        minor: 4,
+        minor: 5,
       },
     };
 
