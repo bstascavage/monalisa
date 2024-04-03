@@ -7,7 +7,9 @@ import Dropdown from "./Dropdown";
 import Servers from "./Servers";
 import ServerButton from "./ServerButton";
 import Hints, { HintData } from "./Hints";
+
 import { ReactComponent as logo } from "./assets/logo.svg";
+import mainLogo from "./assets/mona-lisa-logo-big.png";
 
 import React, { useMemo, useReducer, useState, useEffect } from "react";
 import { Button, Container } from "reactstrap";
@@ -280,6 +282,14 @@ function App() {
       page = (
         <React.Fragment>
           {banner}
+          <div className="logo-title">
+            <img src={mainLogo} className="logo" alt="Mona Lisa Hint System" />
+            <div className="title-subtile">
+              An Archipelago Hint Tool{" "}
+              <span className="mobile-no-display">-</span>
+              <br className="d-md-none"></br> All your hints in one view
+            </div>
+          </div>
           {servers}
           {add_servers}
         </React.Fragment>
@@ -318,14 +328,16 @@ function App() {
       initialClient.disconnect();
       let hints = (
         <React.Fragment>
-          <Hints
-            id="hints"
-            state={pageState}
-            hintData={hintData}
-            filterData={filterData}
-            receivingPlayerFilter={receivingPlayerFilter}
-            findingPlayerFilter={findingPlayerFilter}
-          />
+          <div className="server-list-page-container">
+            <Hints
+              id="hints"
+              state={pageState}
+              hintData={hintData}
+              filterData={filterData}
+              receivingPlayerFilter={receivingPlayerFilter}
+              findingPlayerFilter={findingPlayerFilter}
+            />
+          </div>
         </React.Fragment>
       );
 
@@ -357,7 +369,6 @@ function App() {
                 id="foundFilter"
                 value={filterData}
                 valueSetter={setFilterData}
-                paddingBottom={true}
               />
               <Dropdown
                 title="Show Entrances"
