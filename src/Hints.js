@@ -127,17 +127,7 @@ function renderHints(
   }
 
   // Sort list by player name
-  const hints = hintData.sort(function (a, b) {
-    let x = a.playerName.toLowerCase();
-    let y = b.playerName.toLowerCase();
-    if (x > y) {
-      return 1;
-    }
-    if (x < y) {
-      return -1;
-    }
-    return 0;
-  });
+  const hints = sort(hintData, "playerName");
 
   for (let i = 0; i < hints.length; i++) {
     const hint = hints[i];
@@ -178,14 +168,30 @@ function renderHints(
   return renderList;
 }
 
+function sort(unsortedList, key) {
+  return unsortedList.sort(function (a, b) {
+    let x = a[key].toLowerCase();
+    let y = b[key].toLowerCase();
+    if (x > y) {
+      return 1;
+    }
+    if (x < y) {
+      return -1;
+    }
+    return 0;
+  });
+}
+
 export class HintData {
   constructor(
     state,
+    filterData,
     hintSetter,
     receivingPlayerFilterSetter,
     findingPlayerFilterSetter,
   ) {
     this.state = state;
+    this.filterData = filterData;
     this.hintSetter = hintSetter;
     this.receivingPlayerFilterSetter = receivingPlayerFilterSetter;
     this.findingPlayerFilterSetter = findingPlayerFilterSetter;
@@ -195,30 +201,73 @@ export class HintData {
     // Creates a filter for each game, which is not static
     let receivingPlayerList = [{ name: "All", checked: true }];
     let findingPlayerList = [{ name: "All", checked: true }];
+    let receivingPlayers = new Set([]);
     let findingPlayers = new Set([]);
+    let players = [];
+
+    let hintSelector, foundSelector;
+    for (const value of this.filterData.hintFilter) {
+      if (value.checked === true) {
+        hintSelector = value.name;
+      }
+    }
+
+    for (const value of this.filterData.foundFilter) {
+      if (value.checked === true) {
+        foundSelector = value.name;
+      }
+    }
 
     for (
       let game_index = 0;
       game_index < this.state.clients.length;
       game_index++
     ) {
-      receivingPlayerList.push({
-        name: this.state.clients[game_index].player,
-        checked: false,
-      });
+      players.push(this.state.clients[game_index].player);
 
       let hints = this.state.clients[game_index].client.hints.mine;
+      // Gets the player id and looks up the player name
+      // Adds it to a set in order to deal with duplicates
       for (let hint_index = 0; hint_index < hints.length; hint_index++) {
-        // Gets the player id and looks up the player name
-        // Adds it to a set in order to deal with duplicates
-        findingPlayers.add(
-          this.state.clients[game_index].client.players.name(
+        let player;
+
+        if (hintSelector !== "Assigned Hints") {
+          // If anything but "Assigned Hints" is selected, "Finding Player" should be
+          // all players with valid hints assigned to them
+          player = this.state.clients[game_index].client.players.name(
+            hints[hint_index].receiving_player,
+          );
+        } else if (hintSelector !== "My Hints") {
+          // If anything but "My Hints" is selected, "Receiving Player" should be
+          // all players who have requested hints
+          player = this.state.clients[game_index].client.players.name(
             hints[hint_index].finding_player,
-          ),
-        );
+          );
+        }
+
+        if (players.includes(player) || hintSelector === "All") {
+          // Add players to filter based on the "Found" dropdown
+          if (
+            hints[hint_index].found === (foundSelector === "Found") ||
+            foundSelector === "All"
+          ) {
+            findingPlayers.add(
+              this.state.clients[game_index].client.players.name(
+                hints[hint_index].finding_player,
+              ),
+            );
+            receivingPlayers.add(
+              this.state.clients[game_index].client.players.name(
+                hints[hint_index].receiving_player,
+              ),
+            );
+          }
+        }
       }
     }
 
+    // Converts a Set (which was used to remove duplicates) to a hash
+    // in order to populate the dropdowns
     for (const value of findingPlayers) {
       findingPlayerList.push({
         name: value,
@@ -226,8 +275,19 @@ export class HintData {
       });
     }
 
-    this.receivingPlayerFilterSetter({ playerList: receivingPlayerList });
-    this.findingPlayerFilterSetter({ playerList: findingPlayerList });
+    for (const value of receivingPlayers) {
+      receivingPlayerList.push({
+        name: value,
+        checked: false,
+      });
+    }
+
+    this.receivingPlayerFilterSetter({
+      playerList: sort(receivingPlayerList, "name"),
+    });
+    this.findingPlayerFilterSetter({
+      playerList: sort(findingPlayerList, "name"),
+    });
   }
 
   retrieveHints(serverUpdateEvent = undefined) {

@@ -206,11 +206,12 @@ function App() {
     () =>
       new HintData(
         pageState,
+        filterData,
         setHintData,
         setReceivingPlayerFilter,
         setFindingPlayerFilter,
       ),
-    [pageState],
+    [pageState, filterData],
   );
 
   useEffect(() => {
