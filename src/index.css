@@ -36,7 +36,7 @@ code {
 }
 
 .logo {
-  width: 50%;
+  width: 35%;
 }
 
 .title-subtile {
@@ -93,6 +93,22 @@ code {
 }
 
 @media (max-width: 800px) {
+  .mona-lisa-banner {
+    justify-content: center;
+  }
+
+  .logo {
+    display: none;
+  }
+
+  .title-subtile {
+    text-align: center;
+  }
+
+  .mobile-no-display {
+    display: none;
+  }
+
   .dropdown-row {
     flex-direction: column;
     text-align: center;
@@ -114,7 +130,7 @@ code {
   }
 }
 
-.mona-lisa-logo {
+.mona-lisa-banner-logo {
   max-height: 50px;
   height: auto;
   width: auto;

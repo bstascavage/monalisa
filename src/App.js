@@ -285,7 +285,9 @@ function App() {
           <div className="logo-title">
             <img src={mainLogo} className="logo" alt="Mona Lisa Hint System" />
             <div className="title-subtile">
-              An Archipelago Hint Tool - All your hints in one view
+              An Archipelago Hint Tool{" "}
+              <span className="mobile-no-display">-</span>
+              <br className="d-md-none"></br> All your hints in one view
             </div>
           </div>
           {servers}

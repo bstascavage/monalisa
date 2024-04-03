@@ -22,9 +22,9 @@ function Banner(props) {
     <Box sx={{ flexGrow: 1 }}>
       <ThemeProvider theme={theme}>
         <AppBar position="static" color="banner">
-          <Toolbar>
+          <Toolbar className="mona-lisa-banner">
             <SvgIcon
-              class="mona-lisa-logo"
+              class="mona-lisa-banner-logo"
               component={props.logo}
               inheritViewBox
             ></SvgIcon>
