@@ -48,12 +48,22 @@ function Hints(props) {
       <Table stickyHeader sx={{ minWidth: 650 }} aria-label="sticky table">
         <TableHead>
           <TableRow>
-            <TableCell>Receiving Player</TableCell>
-            <TableCell align="left">Finding Player</TableCell>
-            <TableCell align="left">Item</TableCell>
-            <TableCell align="left">Location</TableCell>
+            <TableCell>
+              <b>Receiving Player</b>
+            </TableCell>
+            <TableCell align="left">
+              <b>Finding Player</b>
+            </TableCell>
+            <TableCell align="left">
+              <b>Item</b>
+            </TableCell>
+            <TableCell align="left">
+              <b>Location</b>
+            </TableCell>
             {renderEntranceHeader()}
-            <TableCell align="left">Status</TableCell>
+            <TableCell align="left">
+              <b>Status</b>
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
