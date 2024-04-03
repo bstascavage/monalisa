@@ -43,6 +43,13 @@ code {
   font-size: x-large;
 }
 
+.server-list-page-container {
+  padding-top: 10px;
+  padding-bottom: 30px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+
 .server-list {
   display: flex;
   justify-content: center;
@@ -100,6 +107,11 @@ code {
   .dropdown-filter-last {
     padding-bottom: 1rem;
   }
+
+  .server-list-page-container {
+    padding-left: 5px;
+    padding-right: 5px;
+  }
 }
 
 .mona-lisa-logo {
@@ -109,6 +121,7 @@ code {
 }
 
 .player-checkbox-container {
+  background-color: #ffffff;
   height: auto;
   max-width: 100%;
   margin: 15px;

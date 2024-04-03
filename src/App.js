@@ -326,14 +326,16 @@ function App() {
       initialClient.disconnect();
       let hints = (
         <React.Fragment>
-          <Hints
-            id="hints"
-            state={pageState}
-            hintData={hintData}
-            filterData={filterData}
-            receivingPlayerFilter={receivingPlayerFilter}
-            findingPlayerFilter={findingPlayerFilter}
-          />
+          <div className="server-list-page-container">
+            <Hints
+              id="hints"
+              state={pageState}
+              hintData={hintData}
+              filterData={filterData}
+              receivingPlayerFilter={receivingPlayerFilter}
+              findingPlayerFilter={findingPlayerFilter}
+            />
+          </div>
         </React.Fragment>
       );
 
@@ -365,7 +367,6 @@ function App() {
                 id="foundFilter"
                 value={filterData}
                 valueSetter={setFilterData}
-                paddingBottom={true}
               />
               <Dropdown
                 title="Show Entrances"
