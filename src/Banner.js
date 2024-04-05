@@ -23,11 +23,7 @@ function Banner(props) {
       <ThemeProvider theme={theme}>
         <AppBar position="static" color="banner">
           <Toolbar className="mona-lisa-banner">
-            <SvgIcon
-              class="mona-lisa-banner-logo"
-              component={props.logo}
-              inheritViewBox
-            ></SvgIcon>
+            <SvgIcon component={props.logo} inheritViewBox></SvgIcon>
           </Toolbar>
         </AppBar>
       </ThemeProvider>
