@@ -68,6 +68,7 @@ code {
   display: flex;
   justify-content: center;
   padding-top: 15px;
+  padding-bottom: 15px;
 }
 
 .add-server-modal {
@@ -134,16 +135,6 @@ code {
   max-height: 50px;
   height: auto;
   width: auto;
-}
-
-/* This overrides material UI's SvgIcon's default class
-If we need multiple SvgIcons, move this into the react code itself
-AFAIK, in the newest material UI you can't point to a CSS class,
- you have to do the styling in the code itself.  Which is dumb. */
-.MuiSvgIcon-root {
-  max-height: 50px;
-  height: auto !important;
-  width: auto !important;
 }
 
 .player-checkbox-container {
