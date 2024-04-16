@@ -30,7 +30,9 @@ function Hints(props) {
 
   const renderEntranceHeader = () => {
     return showEntrance === true ? (
-      <TableCell align="left">Entrance</TableCell>
+      <TableCell align="left">
+        <b>Entrance</b>
+      </TableCell>
     ) : (
       <div></div>
     );
