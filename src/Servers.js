@@ -62,10 +62,28 @@ function renderServerCards(props) {
           }
         })
         .catch((error) => {
+          let errorMsg = "";
           console.error("Failed to connect:", error);
+          switch (error[0]) {
+            case "InvalidPassword":
+              errorMsg =
+                "Incorrect Password.  Please verify your password and try again.";
+              break;
+            case "InvalidGame":
+              errorMsg =
+                "Invalid game name.  Please verify your game name and try again.";
+              break;
+            case "InvalidSlot":
+              errorMsg =
+                "Incorrect player name.  Please verify the player name associated with your game.";
+              break;
+            default:
+              errorMsg =
+                "There is an issue connecting to the server.  Please check your connection info and try again";
+          }
           setPageState({
             type: "error",
-            msg: "There is an issue connecting to the server.  Please check your connection info and try again",
+            msg: errorMsg,
           });
         });
     } catch (err) {
