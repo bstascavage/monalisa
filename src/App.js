@@ -185,6 +185,13 @@ function App() {
       { name: "Yes", checked: false },
       { name: "No", checked: true },
     ],
+    itemTypeFilter: [
+      { name: "All", checked: true },
+      { name: "Normal", checked: false },
+      { name: "Progression", checked: false },
+      { name: "Useful", checked: false },
+      { name: "Trap", checked: false },
+    ],
   });
 
   // TODO: Can this be combined with `filterData`
@@ -369,6 +376,12 @@ function App() {
               <Dropdown
                 title="Status"
                 id="foundFilter"
+                value={filterData}
+                valueSetter={setFilterData}
+              />
+              <Dropdown
+                title="Item Type"
+                id="itemTypeFilter"
                 value={filterData}
                 valueSetter={setFilterData}
               />
