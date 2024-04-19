@@ -28,6 +28,7 @@ function renderServerCards(props) {
       hostname: event.server,
       port: Number(event.port),
       protocol: "wss",
+      password: event.password,
       game: event.gameName,
       name: event.playerName,
       items_handling: ITEMS_HANDLING_FLAGS.REMOTE_ALL,

@@ -100,6 +100,7 @@ function createClients(pageState, setPageState, hints) {
     const connectionInfo = {
       hostname: server.server,
       port: Number(server.port),
+      password: server.password,
       protocol: "wss",
       game: player.game,
       name: player.player,
@@ -160,6 +161,7 @@ function App() {
   let submitFieldDataDefault = {
     server: "archipelago.gg",
     port: "",
+    password: "",
     playerName: "",
     gameName: "",
     nickname: "",
