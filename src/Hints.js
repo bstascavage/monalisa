@@ -101,6 +101,7 @@ function renderHints(
   let renderList = [];
   let hintFilterSelection = "";
   let foundFilterSelection = "";
+  let itemTypeSelection = "";
   let receivingPlayerFilterSelection = "";
   let findingPlayerFilterSelection = "";
 
@@ -113,6 +114,12 @@ function renderHints(
   for (let i = 0; i < filterData.foundFilter.length; i++) {
     if (filterData.foundFilter[i].checked === true) {
       foundFilterSelection = filterData.foundFilter[i].name;
+    }
+  }
+
+  for (let i = 0; i < filterData.itemTypeFilter.length; i++) {
+    if (filterData.itemTypeFilter[i].checked === true) {
+      itemTypeSelection = filterData.itemTypeFilter[i].name;
     }
   }
 
@@ -156,6 +163,7 @@ function renderHints(
           (foundFilterSelection === "Found" && hint.foundBool === "true") ||
           (foundFilterSelection === "Not Found" &&
             hint.foundBool === "false")) &&
+        (itemTypeSelection === "All" || itemTypeSelection === hint.itemType) &&
         (receivingPlayerFilterSelection === "All" ||
           receivingPlayerFilterSelection === hint.playerName) &&
         (findingPlayerFilterSelection === "All" ||
@@ -392,6 +400,25 @@ export class HintData {
     hint.locationName = client.locations.name(findingPlayerName, location_id);
     hint.foundBool = found.toString();
     hint.isFound = found === true ? "Found" : "Not Found";
+
+    // Get item class based off of `item_flags`.
+    // See: https://github.com/ArchipelagoMW/Archipelago/blob/main/docs/network%20protocol.md#networkitem
+    switch (item_flags) {
+      case 0:
+        hint.itemType = "Normal";
+        break;
+      case 1:
+        hint.itemType = "Progression";
+        break;
+      case 2:
+        hint.itemType = "Useful";
+        break;
+      case 3:
+        hint.itemType = "Trap";
+        break;
+      default:
+        hint.itemType = "";
+    }
 
     return hint;
   }

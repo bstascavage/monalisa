@@ -100,6 +100,7 @@ function createClients(pageState, setPageState, hints) {
     const connectionInfo = {
       hostname: server.server,
       port: Number(server.port),
+      password: server.password,
       protocol: "wss",
       game: player.game,
       name: player.player,
@@ -160,6 +161,7 @@ function App() {
   let submitFieldDataDefault = {
     server: "archipelago.gg",
     port: "",
+    password: "",
     playerName: "",
     gameName: "",
     nickname: "",
@@ -182,6 +184,13 @@ function App() {
     entranceFilter: [
       { name: "Yes", checked: false },
       { name: "No", checked: true },
+    ],
+    itemTypeFilter: [
+      { name: "All", checked: true },
+      { name: "Normal", checked: false },
+      { name: "Progression", checked: false },
+      { name: "Useful", checked: false },
+      { name: "Trap", checked: false },
     ],
   });
 
@@ -367,6 +376,12 @@ function App() {
               <Dropdown
                 title="Status"
                 id="foundFilter"
+                value={filterData}
+                valueSetter={setFilterData}
+              />
+              <Dropdown
+                title="Item Type"
+                id="itemTypeFilter"
                 value={filterData}
                 valueSetter={setFilterData}
               />

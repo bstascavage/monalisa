@@ -36,6 +36,7 @@ function ServerButton(props) {
       servers[event.target.nickname.value] = {
         server: event.target.server.value,
         port: event.target.port.value,
+        password: event.target.password.value,
         gameName: event.target.gameName.value,
         playerName: event.target.playerName.value,
         nickname: event.target.nickname.value,
@@ -82,6 +83,22 @@ function ServerButton(props) {
                   value={props.submitFieldData.port}
                   onChange={(e) => {
                     props.submitFieldSetter({ port: e.value });
+                  }}
+                />
+              </Col>
+            </FormGroup>
+            <FormGroup row>
+              <Label for="port" sm={3}>
+                Password
+              </Label>
+              <Col sm={8}>
+                <Input
+                  id="password"
+                  name="password"
+                  type="text"
+                  value={props.submitFieldData.password}
+                  onChange={(e) => {
+                    props.submitFieldSetter({ password: e.value });
                   }}
                 />
               </Col>
